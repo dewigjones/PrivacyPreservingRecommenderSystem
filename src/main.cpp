@@ -8,6 +8,7 @@
 #include <seal/secretkey.h>
 #include <string>
 #include "seal/seal.h"
+#include "CSP.hpp"
 
 int main(){
     //Set up seal 
@@ -24,6 +25,9 @@ int main(){
     keygen.create_public_key(public_key);
 
     std::cout << "Hello World, public key size is " << public_key.data().size() << std::endl;
+    auto a = new CSP();
+    std::cout << a->generateKeys()  << std::endl;
+
 
     return 0;
 }
