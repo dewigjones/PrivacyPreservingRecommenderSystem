@@ -21,6 +21,7 @@ public:
 
 int generateKeys();
 CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
+EncryptedRating convertRatingAHEtoFHE(EncryptedRatingAHE rating);
 
 CSP(){ 
     generateKeysAHE();
