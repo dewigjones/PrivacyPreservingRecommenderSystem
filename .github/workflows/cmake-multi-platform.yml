@@ -57,7 +57,7 @@ jobs:
 
         
     - name: Configure vcpkg
-      run: vcpkg integrate install && vcpkg install seal && vcpkg install cryptopp
+      run: vcpkg integrate && vcpkg install
 
   
     - name: Configure CMake
