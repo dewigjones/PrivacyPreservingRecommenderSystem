@@ -57,7 +57,7 @@ jobs:
 
         
     - name: Configure vcpkg
-      run: vcpkg integrate install
+      run: vcpkg\vcpkg integrate install
 
   
     - name: Configure CMake
