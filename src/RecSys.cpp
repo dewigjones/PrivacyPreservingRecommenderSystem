@@ -18,3 +18,12 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
     ratings.push_back(CSPInstance->convertRatingAHEtoFHE(rating));
     return true;
 }
+
+bool RecSys::gradientDescent()
+{
+    //Steps 1-2  (Component-Wise Multiplication and Rating Addition)
+    for(auto rating : ratings) {
+
+    }
+    return true;
+}
