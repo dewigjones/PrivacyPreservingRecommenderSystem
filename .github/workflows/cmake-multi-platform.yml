@@ -63,7 +63,7 @@ jobs:
 
         
     - name: Configure vcpkg
-      run: ${{ github.workspace }}/vcpkg/vcpkg integrate install
+      run: vcpkg integrate install
 
   
     - name: Configure CMake
