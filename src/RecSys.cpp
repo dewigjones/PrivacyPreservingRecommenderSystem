@@ -1,6 +1,5 @@
 #include "RecSys.hpp"
 
-
 /// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
 /// @return seal Plaintext mask
 seal::Plaintext RecSys::generateMaskFHE(){
@@ -42,7 +41,11 @@ bool RecSys::gradientDescent()
 
             //Subtract scaled rating from f
             sealEvaulator.sub_inplace(f[i][j], scaledRating);
+
+            //Add the mask
+            sealEvaulator.add_plain_inplace(f[i][j], generateMaskFHE());
         }
     }
+
     return true;
 }
