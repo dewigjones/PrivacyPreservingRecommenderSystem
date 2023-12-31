@@ -3,7 +3,13 @@
 #include "CSP.hpp"
 #include <math.h>
 #include <seal/seal.h>
+
+//AHE libraries
 #include <cryptopp/osrng.h>
+
+//Include libraries for FHE mask rng
+#include <random>
+#include <limits>
 
 class RecSys {
   //Values and Variables
@@ -13,10 +19,17 @@ class RecSys {
   std::vector<int> users;
   std::vector<int> movies;
 
+  //Random Number Generation for FHE mask
+  //Inspired by https://stackoverflow.com/questions/22883840/c-get-random-number-from-0-to-max-long-long-integer  
+  std::random_device rd;
+  std::mt19937_64 gen;
+  std::uniform_int_distribution<unsigned long long> distr;
+
   //SEAL values and Variables
   seal::SEALContext sealContext;
   seal::Evaluator sealEvaulator;
   seal::BatchEncoder sealBatchEncoder;
+  size_t sealSlotCount;
 
   //Parameters for RS
   int d; //Dimension of profiles
@@ -32,11 +45,15 @@ class RecSys {
   seal::Plaintext twoToTheAlpha;
   
   //Functions
-  int generateMask();
+  seal::Plaintext generateMaskFHE();
   uint8_t generateMaskAHE();
 public:
-  RecSys(CSP *csp, seal::SEALContext sealcontext) : CSPInstance(csp),sealContext(sealcontext), sealEvaulator(sealcontext), sealBatchEncoder(sealcontext) {
-    std::vector<uint64_t> twoToTheAlphaEncodingVector(sealBatchEncoder.slot_count(), 0ULL); 
+  RecSys(CSP *csp, seal::SEALContext sealcontext) : CSPInstance(csp),sealContext(sealcontext), sealEvaulator(sealcontext), sealBatchEncoder(sealcontext), gen(rd()) {
+    //Save slot count
+    sealSlotCount = sealBatchEncoder.slot_count();
+
+    //Encode 2^alpha    
+    std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL); 
     twoToTheAlphaEncodingVector[0] = (unsigned long long) pow(2,alpha);
     sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
   }

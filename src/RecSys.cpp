@@ -1,7 +1,16 @@
 #include "RecSys.hpp"
 
-int RecSys::generateMask(){
-    return 0;
+
+/// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
+/// @return seal Plaintext mask
+seal::Plaintext RecSys::generateMaskFHE(){
+    std::vector<uint64_t> maskVector(sealSlotCount, 0ULL);
+    for(int i = 0; i < sealSlotCount; i++) {
+        maskVector[i] = distr(gen);
+    }
+    seal::Plaintext mask;
+    sealBatchEncoder.encode(maskVector, mask);
+    return mask;
 }
 
 ///@brief Generates a random mask for use with the ElGamalAHE scheme - Upload Phase
