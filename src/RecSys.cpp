@@ -24,7 +24,15 @@ bool RecSys::gradientDescent()
     //Steps 1-2  (Component-Wise Multiplication and Rating Addition)
     for(int i = 0; i < RecSys::U.size(); i++) {
         for(int j = 0; j < RecSys::V.size(); j++){
-            sealEvaulator.add(RecSys::U.at(i), RecSys::V.at(j), RecSys::f[i][j]);
+            //f[i][j] = U[i] * V[j]
+            sealEvaulator.multiply(RecSys::U.at(i), RecSys::V.at(j), RecSys::f[i][j]);
+            
+            //Scale the rating to the same alpha number of integer bits as U and V
+            seal::Ciphertext scaledRating;
+            sealEvaulator.multiply_plain(r[i][j], twoToTheAlpha, scaledRating);
+
+            //Subtract scaled rating from f
+            sealEvaulator.sub_inplace(f[i][j], scaledRating);
         }
     }
     return true;
