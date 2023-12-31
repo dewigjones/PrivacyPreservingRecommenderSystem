@@ -22,8 +22,10 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 bool RecSys::gradientDescent()
 {
     //Steps 1-2  (Component-Wise Multiplication and Rating Addition)
-    for(auto rating : ratings) {
-
+    for(int i = 0; i < RecSys::U.size(); i++) {
+        for(int j = 0; j < RecSys::V.size(); j++){
+            sealEvaulator.add(RecSys::U.at(i), RecSys::V.at(j), RecSys::f[i][j]);
+        }
     }
     return true;
 }
