@@ -37,7 +37,7 @@ class RecSys {
 public:
   RecSys(CSP *csp, seal::SEALContext sealcontext) : CSPInstance(csp),sealContext(sealcontext), sealEvaulator(sealcontext), sealBatchEncoder(sealcontext) {
     std::vector<uint64_t> twoToTheAlphaEncodingVector(sealBatchEncoder.slot_count(), 0ULL); 
-    twoToTheAlphaEncodingVector[0] = (ULL) pow(2,alpha);
+    twoToTheAlphaEncodingVector[0] = (unsigned long long) pow(2,alpha);
     sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
   }
 
