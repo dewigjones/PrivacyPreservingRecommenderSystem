@@ -30,6 +30,7 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 bool RecSys::gradientDescent()
 {
     //Steps 1-2  (Component-Wise Multiplication and Rating Addition)
+    std::vector<std::vector<seal::Plaintext>> epsilonMask(RecSys::U.size(), std::vector<seal::Plaintext>(RecSys::V.size()));
     for(int i = 0; i < RecSys::U.size(); i++) {
         for(int j = 0; j < RecSys::V.size(); j++){
             //f[i][j] = U[i] * V[j]
@@ -37,15 +38,19 @@ bool RecSys::gradientDescent()
             
             //Scale the rating to the same alpha number of integer bits as U and V
             seal::Ciphertext scaledRating;
-            sealEvaulator.multiply_plain(r[i][j], twoToTheAlpha, scaledRating);
+            sealEvaulator.multiply_plain(RecSys::r[i][j], twoToTheAlpha, scaledRating);
 
             //Subtract scaled rating from f
-            sealEvaulator.sub_inplace(f[i][j], scaledRating);
+            sealEvaulator.sub_inplace(RecSys::f[i][j], scaledRating);
 
             //Add the mask
-            sealEvaulator.add_plain_inplace(f[i][j], generateMaskFHE());
+            epsilonMask[i][j] = generateMaskFHE();
+            sealEvaulator.add_plain_inplace(RecSys::f[i][j], epsilonMask[i][j]);
         }
     }
+
+    //Steps 3-4 (Summation)
+    std::vector<std::vector<seal::Ciphertext>> RPrimePrime = CSPInstance->sumF(RecSys::f);
 
     return true;
 }
