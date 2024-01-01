@@ -1,6 +1,7 @@
 #pragma once
 #include <cryptopp/elgamal.h>
 #include <cryptopp/osrng.h>
+#include <seal/seal.h>
 #include "Ratings.hpp"
 
 class CSP {
@@ -17,14 +18,24 @@ CryptoPP::ElGamalKeys::PublicKey ahe_PublicKey;
 CryptoPP::ElGamal::Decryptor ahe_Decryptor;
 CryptoPP::ElGamal::Encryptor ahe_Encryptor;
 
+// SEAL FHE values and variables
+seal::SEALContext sealContext;
+seal::PublicKey sealHpk;
+seal::SecretKey sealPrivateKey;
+seal::Encryptor sealEncryptor;
+seal::Decryptor sealDecryptor;
+seal::BatchEncoder sealBatchEncoder;
+size_t sealSlotCount;
+
 public:
 
 int generateKeys();
 CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
 EncryptedRating convertRatingAHEtoFHE(EncryptedRatingAHE rating);
+std::vector<std::vector<seal::Ciphertext>> sumF(std::vector<std::vector<seal::Ciphertext>> f);
 
-CSP(){ 
-    generateKeysAHE();
+CSP(seal::SEALContext sealcontext, seal::PublicKey sealhpk, seal::SecretKey sealprivatekey) : sealContext(sealcontext), sealHpk(sealhpk), sealPrivateKey(sealprivatekey), sealEncryptor(sealcontext, sealhpk), sealDecryptor(sealcontext, sealprivatekey), sealBatchEncoder(sealcontext) {
+    sealSlotCount = sealBatchEncoder.slot_count();
 }
 
 };

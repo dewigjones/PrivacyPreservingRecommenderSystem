@@ -25,7 +25,7 @@ int main(){
     keygen.create_public_key(public_key);
 
     std::cout << "Hello World, public key size is " << public_key.data().size() << std::endl;
-    auto a = new CSP();
+    auto a = new CSP(context, public_key, secret_key);
     std::cout << a->generateKeys()  << std::endl;
 
 
