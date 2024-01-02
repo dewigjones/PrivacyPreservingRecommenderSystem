@@ -27,7 +27,8 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
     return true;
 }
 
-bool RecSys::gradientDescent()
+bool
+ RecSys::gradientDescent()
 {
     //Steps 1-2  (Component-Wise Multiplication and Rating Addition)
     std::vector<std::vector<seal::Plaintext>> epsilonMask(RecSys::U.size(), std::vector<seal::Plaintext>(RecSys::V.size()));
