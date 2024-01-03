@@ -1,15 +1,13 @@
 #include "RecSys.hpp"
 
 /// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
-/// @return seal Plaintext mask
-seal::Plaintext RecSys::generateMaskFHE() {
+/// @return Mask as uint64_t vector
+std::vector<uint64_t> RecSys::generateMaskFHE() {
   std::vector<uint64_t> maskVector(sealSlotCount, 0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
     maskVector[i] = distr(gen);
   }
-  seal::Plaintext mask;
-  sealBatchEncoder.encode(maskVector, mask);
-  return mask;
+  return maskVector;
 }
 
 ///@brief Generates a random mask for use with the ElGamalAHE scheme - Upload
@@ -30,30 +28,53 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 
 bool RecSys::gradientDescent() {
   // Steps 1-2  (Component-Wise Multiplication and Rating Addition)
-  std::vector<std::vector<seal::Plaintext>> epsilonMask(
-      RecSys::U.size(), std::vector<seal::Plaintext>(RecSys::V.size()));
+  std::vector<std::vector<std::vector<uint64_t>>> epsilonMask(
+      RecSys::U.size(), std::vector<std::vector<uint64_t>>(RecSys::V.size()));
   for (int i = 0; i < RecSys::U.size(); i++) {
     for (int j = 0; j < RecSys::V.size(); j++) {
       // f[i][j] = U[i] * V[j]
-      sealEvaulator.multiply(RecSys::U.at(i), RecSys::V.at(j), RecSys::f[i][j]);
+      sealEvaluator.multiply(RecSys::U.at(i), RecSys::V.at(j), RecSys::f[i][j]);
 
       // Scale the rating to the same alpha number of integer bits as U and V
       seal::Ciphertext scaledRating;
-      sealEvaulator.multiply_plain(RecSys::r[i][j], twoToTheAlpha,
+      sealEvaluator.multiply_plain(RecSys::r[i][j], twoToTheAlpha,
                                    scaledRating);
 
       // Subtract scaled rating from f
-      sealEvaulator.sub_inplace(RecSys::f[i][j], scaledRating);
+      sealEvaluator.sub_inplace(RecSys::f[i][j], scaledRating);
 
       // Add the mask
       epsilonMask[i][j] = generateMaskFHE();
-      sealEvaulator.add_plain_inplace(RecSys::f[i][j], epsilonMask[i][j]);
+      seal::Plaintext mask;
+      sealBatchEncoder.encode(epsilonMask[i][j], mask);
+      sealEvaluator.add_plain_inplace(RecSys::f[i][j], mask);
     }
   }
 
   // Steps 3-4 (Summation)
   std::vector<std::vector<seal::Ciphertext>> RPrimePrime =
       CSPInstance->sumF(RecSys::f);
-
+  
+  // Steps 5-7 (Component-Wise Multiplication and Addition) 
+  // Remove mask by summing it and then subtracting
+  std::vector<std::vector<std::vector<uint64_t>>> epsilonMaskSum(
+      RecSys::U.size(), std::vector<std::vector<uint64_t>>(RecSys::V.size()));
+  for(int i = 0; i < epsilonMask.size(); i++) {
+    for (int j = 0; j < epsilonMask[i].size(); j++) {
+      //Calculate sum for i and j entry
+      uint64_t kSum = 0;
+      for (int k = 0; k < d; k++){
+        kSum += epsilonMask[i][j][k];
+      }
+      //Set all of i and j entry to sum
+      for (int k = 0; k < d; k++){
+        epsilonMaskSum[i][j][k] = kSum;
+      }
+      //Encode and subtract sum of mask
+      seal::Plaintext epsilonMaskSumPlaintext;
+      sealBatchEncoder.encode(epsilonMaskSum[i][j], epsilonMaskSumPlaintext);
+      sealEvaluator.sub_plain(RPrimePrime[i][j], epsilonMaskSumPlaintext, RecSys::R[i][j]);
+    }
+  }
   return true;
 }

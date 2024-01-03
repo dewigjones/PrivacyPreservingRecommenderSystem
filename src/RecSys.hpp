@@ -28,7 +28,7 @@ class RecSys {
 
   // SEAL values and Variables
   seal::SEALContext sealContext;
-  seal::Evaluator sealEvaulator;
+  seal::Evaluator sealEvaluator;
   seal::BatchEncoder sealBatchEncoder;
   size_t sealSlotCount;
 
@@ -39,21 +39,20 @@ class RecSys {
   int gamma;  // Number of bits for gradient descent computation
 
   // Intermediate values for gradient descent
-  std::vector<seal::Ciphertext> RPrime;
   std::vector<std::pair<int, int>> M;
   std::vector<seal::Ciphertext> U, V, UHat, VHat;
-  std::vector<std::vector<seal::Ciphertext>> f, r;
+  std::vector<std::vector<seal::Ciphertext>> R, r, f;
   seal::Plaintext twoToTheAlpha;
 
   // Functions
-  seal::Plaintext generateMaskFHE();
+  std::vector<uint64_t> generateMaskFHE();
   uint8_t generateMaskAHE();
 
  public:
   RecSys(CSP* csp, seal::SEALContext sealcontext)
       : CSPInstance(csp),
         sealContext(sealcontext),
-        sealEvaulator(sealcontext),
+        sealEvaluator(sealcontext),
         sealBatchEncoder(sealcontext),
         gen(rd()) {
     // Save slot count
