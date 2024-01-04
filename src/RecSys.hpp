@@ -42,7 +42,7 @@ class RecSys {
   std::vector<std::pair<int, int>> M;
   std::vector<seal::Ciphertext> U, V, UHat, VHat;
   std::vector<std::vector<seal::Ciphertext>> R, r, f;
-  seal::Plaintext twoToTheAlpha;
+  seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta;
 
   // Functions
   std::vector<uint64_t> generateMaskFHE();
@@ -60,8 +60,27 @@ class RecSys {
 
     // Encode 2^alpha
     std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL);
-    twoToTheAlphaEncodingVector[0] = (unsigned long long)pow(2, alpha);
+    for (int i = 0; i < sealSlotCount; i++) {
+      twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
+    }
     sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
+
+    // Encode 2^beta
+    std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL);
+    for (int i = 0; i < sealSlotCount; i++) {
+      twoToTheBetaEncodingVector[i] = (unsigned long long)pow(2, beta);
+    }
+    sealBatchEncoder.encode(twoToTheBetaEncodingVector, twoToTheBeta);
+
+    // Encode 2^(alpha+beta)
+    std::vector<uint64_t> twoToTheAlphaPlusBetaEncodingVector(sealSlotCount,
+                                                              0ULL);
+    for (int i = 0; i < sealSlotCount; i++) {
+      twoToTheAlphaPlusBetaEncodingVector[i] =
+          (unsigned long long)pow(2, alpha + beta);
+    }
+    sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
+                            twoToTheAlphaPlusBeta);
   }
 
   bool uploadRating(EncryptedRatingAHE rating);
