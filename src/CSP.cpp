@@ -28,7 +28,7 @@ EncryptedRating CSP::convertRatingAHEtoFHE(EncryptedRatingAHE rating) {
 /// @brief Sum f vector produced by RecSys - Step 3 and 4 of GDS
 /// @return R''
 std::vector<std::vector<seal::Ciphertext>> CSP::sumF(
-    std::vector<std::vector<seal::Ciphertext>> f) {
+    const std::vector<std::vector<seal::Ciphertext>> f) {
   // Declare result
   std::vector<std::vector<uint64_t>> rprime;
 

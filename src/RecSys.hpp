@@ -49,7 +49,7 @@ class RecSys {
   uint8_t generateMaskAHE();
 
  public:
-  RecSys(CSP* csp, seal::SEALContext sealcontext)
+  RecSys(CSP* csp, const seal::SEALContext sealcontext)
       : CSPInstance(csp),
         sealContext(sealcontext),
         sealEvaluator(sealcontext),

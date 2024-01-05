@@ -12,11 +12,11 @@
 
 int main() {
   // Set up seal
-  seal::EncryptionParameters params(seal::scheme_type::bfv);
-  size_t poly_modulus_degree = 4096;
+  seal::EncryptionParameters params(seal::scheme_type::bgv);
+  size_t poly_modulus_degree = 8192;
   params.set_poly_modulus_degree(poly_modulus_degree);
   params.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
-  params.set_plain_modulus(1024);
+  params.set_plain_modulus(seal::PlainModulus::Batching(poly_modulus_degree, 20));
   seal::SEALContext context(params);
 
   seal::KeyGenerator keygen(context);
