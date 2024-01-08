@@ -81,7 +81,18 @@ bool RecSys::gradientDescent() {
   // Steps 6-7 - Calculate U Gradient , V Gradient, U', V' and add Masks
   for (int i = 0; i < RecSys::U.size(); i++) {
     for (int j = 0; j < RecSys::V.size(); j++) {
+
+      //Encode user and item
+      std::vector<uint64_t> userEncodingVector(sealSlotCount, 0ULL), itemEncodingVector(sealSlotCount, 0ULL);
+      seal::Plaintext encodedUser, encodedItem;
+      userEncodingVector[0] = users[i];
+      itemEncodingVector[0] = movies[j];
+      sealBatchEncoder.encode(userEncodingVector, encodedUser);
+      sealBatchEncoder.encode(itemEncodingVector, encodedItem);
+
       // UGradient'[i] = v[j] * R[i][j] + twoToTheAlpha * lambda * UHat[i]
+      std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime;
+      sealEvaluator.multiply_plain(RecSys::R[i][j], encodedItem, UGradientPrime[i]);
       // VGradient'[j] = u[j] * R[i][j] + twoToTheAlpha * lambda * VHat[j]
 
       // TODO(Check #1 scaling (alpha, beta))
