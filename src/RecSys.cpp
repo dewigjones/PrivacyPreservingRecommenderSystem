@@ -79,6 +79,7 @@ bool RecSys::gradientDescent() {
   }
 
   // Steps 6-7 - Calculate U Gradient , V Gradient, U', V' and add Masks
+  std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime, UPrime, VPrime;
   for (int i = 0; i < RecSys::U.size(); i++) {
     for (int j = 0; j < RecSys::V.size(); j++) {
 
@@ -91,14 +92,29 @@ bool RecSys::gradientDescent() {
       sealBatchEncoder.encode(itemEncodingVector, encodedItem);
 
       // UGradient'[i] = v[j] * R[i][j] + twoToTheAlpha * lambda * UHat[i]
-      std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime;
+      seal::Ciphertext UHatLambdaMul, VHatLambdaMul;
       sealEvaluator.multiply_plain(RecSys::R[i][j], encodedItem, UGradientPrime[i]);
+      sealEvaluator.multiply_plain(UHat[i], scaledLambda, UHatLambdaMul);
+      sealEvaluator.add_inplace(UGradientPrime[i], UHatLambdaMul);
+
       // VGradient'[j] = u[j] * R[i][j] + twoToTheAlpha * lambda * VHat[j]
+      sealEvaluator.multiply_plain(RecSys::R[i][j], encodedUser, VGradientPrime[i]);
+      sealEvaluator.multiply_plain(UHat[i], scaledLambda, VHatLambdaMul);
+      sealEvaluator.add_inplace(UGradientPrime[i], VHatLambdaMul);
 
       // TODO(Check #1 scaling (alpha, beta))
       // U'[i] = twoToTheAlphaPlusBeta * UHat[i] - gamma * twoToTheBeta *
-      // UGradient'[i] V'[i] = twoToTheAlphaPlusBeta * VHat[i] - gamma *
+      // UGradient'[i] 
+      seal::Ciphertext gammaUGradient, gammaVGradient;
+      sealEvaluator.multiply_plain(UHat[i], twoToTheAlphaPlusBeta, UPrime[i]);
+      sealEvaluator.multiply_plain(UGradientPrime[i], scaledGamma, gammaUGradient);
+      sealEvaluator.sub_inplace(UPrime[i], gammaUGradient);
+
+      // V'[i] = twoToTheAlphaPlusBeta * VHat[i] - gamma *
       // twoToTheBeta * VGradient'[i]
+      sealEvaluator.multiply_plain(VHat[i], twoToTheAlphaPlusBeta, VPrime[i]);
+      sealEvaluator.multiply_plain(VGradientPrime[i], scaledGamma, gammaVGradient);
+      sealEvaluator.sub_inplace(VPrime[i], gammaVGradient);
     }
   }
   return true;
