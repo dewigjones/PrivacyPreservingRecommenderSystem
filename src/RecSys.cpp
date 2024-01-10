@@ -112,10 +112,31 @@ bool RecSys::gradientDescent() {
 
       // V'[i] = twoToTheAlphaPlusBeta * VHat[i] - gamma *
       // twoToTheBeta * VGradient'[i]
-      sealEvaluator.multiply_plain(VHat[i], twoToTheAlphaPlusBeta, VPrime[i]);
-      sealEvaluator.multiply_plain(VGradientPrime[i], scaledGamma, gammaVGradient);
-      sealEvaluator.sub_inplace(VPrime[i], gammaVGradient);
+      sealEvaluator.multiply_plain(VHat[j], twoToTheAlphaPlusBeta, VPrime[j]);
+      sealEvaluator.multiply_plain(VGradientPrime[j], scaledGamma, gammaVGradient);
+      sealEvaluator.sub_inplace(VPrime[j], gammaVGradient);
     }
+  }
+  // Step 7 - Generate and add masks
+  std::vector<std::vector<uint64_t>> UGradientPrimeMaskEncodingVector, VGradientPrimeMaskEncodingVector, UPrimeMaskEncodingVector, VPrimeMaskEncodingVector;
+  std::vector<seal::Plaintext> UGradientPrimeMask, VGradientPrimeMask, UPrimeMask, VPrimeMask;
+  for(int i = 0; i < RecSys::U.size(); i++){
+    UPrimeMaskEncodingVector[i] = generateMaskFHE();
+    UGradientPrimeMaskEncodingVector[i] = generateMaskFHE();
+    sealBatchEncoder.encode(UGradientPrimeMaskEncodingVector[i], UGradientPrimeMask[i]);
+    sealBatchEncoder.encode(UPrimeMaskEncodingVector[i], UPrimeMask[i]);
+
+    sealEvaluator.add_plain_inplace(UGradientPrime[i], UGradientPrimeMask[i]);
+    sealEvaluator.add_plain_inplace(UPrime[i], UPrimeMask[i]);
+  }  
+  for(int j = 0; j < RecSys::V.size(); j++) {
+    VPrimeMaskEncodingVector[j] = generateMaskFHE();
+    VGradientPrimeMaskEncodingVector[j] = generateMaskFHE();
+    sealBatchEncoder.encode(VGradientPrimeMaskEncodingVector[j], VGradientPrimeMask[j]);
+    sealBatchEncoder.encode(VPrimeMaskEncodingVector[j], VPrimeMask[j]);
+
+    sealEvaluator.add_plain_inplace(VGradientPrime[j], VGradientPrimeMask[j]);
+    sealEvaluator.add_plain_inplace(VPrime[j], VPrimeMask[j]);
   }
   return true;
 }
