@@ -3,6 +3,7 @@
 #include <cryptopp/osrng.h>
 #include <seal/seal.h>
 #include "Ratings.hpp"
+#include <math.h>
 
 class CSP {
   int generateKeysFHE();
@@ -26,6 +27,11 @@ class CSP {
   seal::BatchEncoder sealBatchEncoder;
   size_t sealSlotCount;
 
+  // Algorithmic parameters
+  int alpha;
+  int beta;
+  int twoPowerAlpha, twoPowerBeta;
+
  public:
   int generateKeys();
   CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
@@ -43,5 +49,7 @@ class CSP {
         sealDecryptor(sealcontext, sealprivatekey),
         sealBatchEncoder(sealcontext) {
     sealSlotCount = sealBatchEncoder.slot_count();
+    twoPowerAlpha = pow(2, alpha);
+    twoPowerBeta = pow(2, beta);
   }
 };

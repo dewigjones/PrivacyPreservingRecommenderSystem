@@ -46,6 +46,9 @@ std::vector<std::vector<seal::Ciphertext>> CSP::sumF(
       for (int k = 0; k < sealSlotCount; k++) {
         rprime[i][j] += f_decode[i][j][k];
       }
+
+      // Scale 
+      rprim[i][j] *= twoPowerAlpha;
     }
   }
 
