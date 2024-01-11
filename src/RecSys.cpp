@@ -68,7 +68,7 @@ bool RecSys::gradientDescent() {
       }
       // Set all of i and j entry to sum
       for (int k = 0; k < d; k++) {
-        epsilonMaskSum[i][j][k] = kSum;
+        epsilonMaskSum[i][j][k] = kSum * pow(2,alpha);
       }
       // Encode and subtract sum of mask
       seal::Plaintext epsilonMaskSumPlaintext;
