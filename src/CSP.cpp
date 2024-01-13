@@ -48,7 +48,7 @@ std::vector<std::vector<seal::Ciphertext>> CSP::sumF(
       }
 
       // Scale 
-      rprime[i][j] *= twoPowerAlpha;
+      rprime[i][j] /= twoPowerAlpha;
     }
   }
 
