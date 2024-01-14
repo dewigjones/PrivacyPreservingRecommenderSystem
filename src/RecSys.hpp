@@ -41,7 +41,7 @@ class RecSys {
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
-  std::vector<std::vector<seal::Ciphertext>> R, r, f, U, V, UHat, VHat;;
+  std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat;;
   seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta, scaledLambda, scaledGamma;
 
   // Functions

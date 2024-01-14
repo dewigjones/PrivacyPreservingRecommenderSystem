@@ -38,8 +38,8 @@ class CSP {
   int generateKeys();
   CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
   EncryptedRating convertRatingAHEtoFHE(EncryptedRatingAHE rating);
-  std::vector<std::vector<seal::Ciphertext>> sumF(
-      std::vector<std::vector<seal::Ciphertext>> f);
+  std::vector<seal::Ciphertext> sumF(
+      std::vector<seal::Ciphertext> f);
 
   CSP(seal::SEALContext sealcontext,
       seal::PublicKey sealhpk,
