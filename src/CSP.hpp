@@ -32,6 +32,8 @@ class CSP {
   int beta;
   int twoPowerAlpha, twoPowerBeta;
 
+  // Rating space information
+  std::vector<std::pair<int, int>> M;
  public:
   int generateKeys();
   CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
@@ -52,4 +54,12 @@ class CSP {
     twoPowerAlpha = pow(2, alpha);
     twoPowerBeta = pow(2, beta);
   }
+
+  // Aggregation - sum all ciphertexts "owned by" entry i.e. all ratings for user/ all users for ratings
+  // for i : U
+  //   for j : V 
+  //      aggu[i] += R[i][j]
+  //      aggv[j] += R[i][j]
+  // Reconstitution - Put the aggregation for every entry which has that user/item
+  //
 };

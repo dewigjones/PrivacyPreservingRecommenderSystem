@@ -41,8 +41,7 @@ class RecSys {
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
-  std::vector<seal::Ciphertext> U, V, UHat, VHat;
-  std::vector<std::vector<seal::Ciphertext>> R, r, f;
+  std::vector<std::vector<seal::Ciphertext>> R, r, f, U, V, UHat, VHat;;
   seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta, scaledLambda, scaledGamma;
 
   // Functions
@@ -62,7 +61,7 @@ class RecSys {
     // Encode 2^alpha
     std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL), scaledLambdaEncodingVector(sealSlotCount, 0ULL);
     for (int i = 0; i < sealSlotCount; i++) {
-      twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
+      twoToTheAlphaEncodingVector[i] = (unsigned long long) pow(2, alpha);
       scaledLambdaEncodingVector[i] = (unsigned long long) pow(2, alpha) * lambda;
     }
     sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
