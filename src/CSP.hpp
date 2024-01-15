@@ -1,9 +1,9 @@
 #pragma once
 #include <cryptopp/elgamal.h>
 #include <cryptopp/osrng.h>
+#include <math.h>
 #include <seal/seal.h>
 #include "Ratings.hpp"
-#include <math.h>
 
 class CSP {
   int generateKeysFHE();
@@ -34,12 +34,21 @@ class CSP {
 
   // Rating space information
   std::vector<std::pair<int, int>> M;
+
  public:
   int generateKeys();
   CryptoPP::ElGamalKeys::PublicKey getPublicKeyAHE();
   EncryptedRating convertRatingAHEtoFHE(EncryptedRatingAHE rating);
-  std::vector<seal::Ciphertext> sumF(
-      std::vector<seal::Ciphertext> f);
+  std::vector<seal::Ciphertext> sumF(std::vector<seal::Ciphertext> f);
+
+  std::vector<std::vector<uint64_t>> aggregateUser(
+      std::vector<std::vector<uint64_t>> A);
+  std::vector<std::vector<uint64_t>> aggregateItem(
+      std::vector<std::vector<uint64_t>> A);
+  std::vector<std::vector<uint64_t>> reconstituteUser(
+      std::vector<std::vector<uint64_t>> A);
+  std::vector<std::vector<uint64_t>> reconstituteItem(
+      std::vector<std::vector<uint64_t>> A);
 
   CSP(seal::SEALContext sealcontext,
       seal::PublicKey sealhpk,
@@ -55,11 +64,12 @@ class CSP {
     twoPowerBeta = pow(2, beta);
   }
 
-  // Aggregation - sum all ciphertexts "owned by" entry i.e. all ratings for user/ all users for ratings
-  // for i : U
-  //   for j : V 
+  // Aggregation - sum all ciphertexts "owned by" entry i.e. all ratings for
+  // user/ all users for ratings for i : U
+  //   for j : V
   //      aggu[i] += R[i][j]
   //      aggv[j] += R[i][j]
-  // Reconstitution - Put the aggregation for every entry which has that user/item
+  // Reconstitution - Put the aggregation for every entry which has that
+  // user/item
   //
 };

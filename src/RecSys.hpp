@@ -33,16 +33,18 @@ class RecSys {
   size_t sealSlotCount;
 
   // Parameters for RS
-  int d;      // Dimension of profiles
-  int alpha;  // Number of integer bits for real numbers
-  int beta;   // Number of fractional bits for real numbers
-  int gamma;  // Number of bits for gradient descent computation
-  int lambda; // Learning rate
+  int d;       // Dimension of profiles
+  int alpha;   // Number of integer bits for real numbers
+  int beta;    // Number of fractional bits for real numbers
+  int gamma;   // Number of bits for gradient descent computation
+  int lambda;  // Learning rate
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
-  std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat;;
-  seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta, scaledLambda, scaledGamma;
+  std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat;
+  ;
+  seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta,
+      scaledLambda, scaledGamma;
 
   // Functions
   std::vector<uint64_t> generateMaskFHE();
@@ -59,17 +61,19 @@ class RecSys {
     sealSlotCount = sealBatchEncoder.slot_count();
 
     // Encode 2^alpha
-    std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL), scaledLambdaEncodingVector(sealSlotCount, 0ULL);
+    std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL),
+        scaledLambdaEncodingVector(sealSlotCount, 0ULL);
     for (int i = 0; i < sealSlotCount; i++) {
-      twoToTheAlphaEncodingVector[i] = (unsigned long long) pow(2, alpha);
-      scaledLambdaEncodingVector[i] = (unsigned long long) pow(2, alpha) * lambda;
+      twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
+      scaledLambdaEncodingVector[i] =
+          (unsigned long long)pow(2, alpha) * lambda;
     }
     sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
     sealBatchEncoder.encode(scaledLambdaEncodingVector, scaledLambda);
 
-
     // Encode 2^beta
-    std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL), scaledGammaEncodingVector(sealSlotCount, 0ULL);
+    std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL),
+        scaledGammaEncodingVector(sealSlotCount, 0ULL);
     for (int i = 0; i < sealSlotCount; i++) {
       twoToTheBetaEncodingVector[i] = (unsigned long long)pow(2, beta);
       scaledGammaEncodingVector[i] = (unsigned long long)pow(2, beta) * gamma;
