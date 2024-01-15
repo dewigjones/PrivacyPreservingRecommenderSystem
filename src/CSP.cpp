@@ -64,7 +64,7 @@ std::vector<seal::Ciphertext> CSP::sumF(const std::vector<seal::Ciphertext> f) {
   return rprimeEncrypt;
 }
 
-/// Sum d-dimensional items of A vector, grouped by user
+/// Sum d-dimensional vector of A vector, grouped by user
 /// @brief aggu operation in paper
 /// @param A - decoded plaintext vector
 std::vector<std::vector<uint64_t>> CSP::aggregateUser(
@@ -80,12 +80,45 @@ std::vector<std::vector<uint64_t>> CSP::aggregateUser(
     // If current user is not the same as the last, push result and move onto
     // the next user
     if (curUser != prevUser) {
-      result.push_back(curResult);
-      std::fill(curResult.begin(), curResult.end(), 0);
+      if (prevUser != -1) {
+        result.push_back(curResult);
+        std::fill(curResult.begin(), curResult.end(), 0);
+      }
       prevUser = curUser;
     }
 
     // Add current entry to the running total for the current user
+    for (int j = 0; j < sealSlotCount; j++) {
+      curResult[j] += A[i][j];
+    }
+  }
+  return result;
+}
+
+/// Sum d-dimensional vector of A vector, grouped by item
+/// @brief aggv operation in paper
+/// @param A - decoded plaintext vector
+std::vector<std::vector<uint64_t>> CSP::aggregateItem(
+    const std::vector<std::vector<uint64_t>> A) {
+  std::vector<std::vector<uint64_t>> result;
+  std::vector<uint64_t> curResult = std::vector<uint64_t>(sealSlotCount, 0ULL);
+  int prevItem = -1;
+
+  for (int i = 0; i < A.size(); i++) {
+    // Get corresponding user at index of M
+    int curItem = M.at(i).first;
+
+    // If current item is not the same as the last, push result and move onto
+    // the next item
+    if (curItem != prevItem) {
+      if (prevItem != -1) {
+        result.push_back(curResult);
+        std::fill(curResult.begin(), curResult.end(), 0);
+      }
+      prevItem = curItem;
+    }
+
+    // Add current entry to the running total for the current item
     for (int j = 0; j < sealSlotCount; j++) {
       curResult[j] += A[i][j];
     }
