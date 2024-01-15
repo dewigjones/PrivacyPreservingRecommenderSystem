@@ -125,3 +125,24 @@ std::vector<std::vector<uint64_t>> CSP::aggregateItem(
   }
   return result;
 }
+
+/// Reconstitute A, grouping by User
+/// @brief recu in paper
+/// @param A - decoded plaintext vector
+std::vector<std::vector<uint64_t>> CSP::reconstituteUser(
+    std::vector<std::vector<uint64_t>> A) {
+  std::vector<std::vector<uint64_t>> result;
+  int prevUser = -1;
+  int aIndex = -1;
+
+  // Go through M
+  for (auto [i, j] : CSP::M) {
+    // If new user, increase index
+    if (i != prevUser) {
+      aIndex++;
+    }
+    // Push A[i] to the result
+    result.push_back(A.at(aIndex));
+  }
+  return result;
+}
