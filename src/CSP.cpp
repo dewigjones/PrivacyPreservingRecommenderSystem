@@ -46,7 +46,7 @@ std::vector<seal::Ciphertext> CSP::sumF(const std::vector<seal::Ciphertext> f) {
     }
 
     // Scale
-    rprime[i] /= twoPowerAlpha;
+    rprime[i] = std::floor(rprime[i] / twoPowerAlpha);
   }
 
   // Encode, encrypt and return rprime
