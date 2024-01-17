@@ -261,3 +261,55 @@ CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
   }
   return std::make_pair(newV, newVHat);
 }
+
+/// @brief Calculate new U Gradient - Step 9
+std::vector<seal::Ciphertext> CSP::calculateNewUGradient(
+    std::vector<seal::Ciphertext> maskedUGradientPrime) {
+  // Decrypt and decode input
+  std::vector<std::vector<uint64_t>> maskedUGradientDecoded;
+  for (int i = 0; i < maskedUGradientPrime.size(); i++) {
+    seal::Plaintext maskedUGradientDecrypt;
+    sealDecryptor.decrypt(maskedUGradientPrime[i], maskedUGradientDecrypt);
+    sealBatchEncoder.decode(maskedUGradientDecrypt, maskedUGradientDecoded[i]);
+  }
+
+  // Get aggregation
+  std::vector<std::vector<uint64_t>> newUGradientDecoded =
+      aggregateUser(maskedUGradientDecoded);
+
+  // Re-encode and re-encrypt
+  std::vector<seal::Ciphertext> newUGradient;
+  for (int i = 0; i < newUGradientDecoded.size(); i++) {
+    seal::Plaintext newUGradientPlaintext;
+    sealBatchEncoder.encode(newUGradientDecoded[i], newUGradientPlaintext);
+    sealEncryptor.encrypt(newUGradientPlaintext, newUGradient[i]);
+  }
+
+  return newUGradient;
+}
+
+/// @brief Calculate new V Gradient - Step 9
+std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
+    std::vector<seal::Ciphertext> maskedVGradientPrime) {
+  // Decrypt and decode input
+  std::vector<std::vector<uint64_t>> maskedVGradientDecoded;
+  for (int i = 0; i < maskedVGradientPrime.size(); i++) {
+    seal::Plaintext maskedVGradientDecrypt;
+    sealDecryptor.decrypt(maskedVGradientPrime[i], maskedVGradientDecrypt);
+    sealBatchEncoder.decode(maskedVGradientDecrypt, maskedVGradientDecoded[i]);
+  }
+
+  // Get aggregation
+  std::vector<std::vector<uint64_t>> newVGradientDecoded =
+      aggregateItem(maskedVGradientDecoded);
+
+  // Re-encode and re-encrypt
+  std::vector<seal::Ciphertext> newVGradient;
+  for (int i = 0; i < newVGradientDecoded.size(); i++) {
+    seal::Plaintext newVGradientPlaintext;
+    sealBatchEncoder.encode(newVGradientDecoded[i], newVGradientPlaintext);
+    sealEncryptor.encrypt(newVGradientPlaintext, newVGradient[i]);
+  }
+
+  return newVGradient;
+}
