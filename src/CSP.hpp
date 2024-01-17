@@ -30,7 +30,8 @@ class CSP {
   // Algorithmic parameters
   int alpha;
   int beta;
-  int twoPowerAlpha, twoPowerBeta;
+  int twoPowerAlpha;
+  int twoPowerBeta;
 
   // Rating space information
   std::vector<std::pair<int, int>> M;
@@ -50,9 +51,18 @@ class CSP {
   std::vector<std::vector<uint64_t>> reconstituteItem(
       std::vector<std::vector<uint64_t>> A);
 
-  CSP(seal::SEALContext sealcontext,
-      seal::PublicKey sealhpk,
-      seal::SecretKey sealprivatekey)
+  std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
+  calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime);
+  std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
+  calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime);
+  std::vector<seal::Ciphertext> calculateNewUGradient(
+      std::vector<seal::Ciphertext> maskedUGradientPrime);
+  std::vector<seal::Ciphertext> calculateNewVGradient(
+      std::vector<seal::Ciphertext> maskedVGradientPrime);
+
+  CSP(seal::SEALContext const& sealcontext,
+      seal::PublicKey const& sealhpk,
+      seal::SecretKey const& sealprivatekey)
       : sealContext(sealcontext),
         sealHpk(sealhpk),
         sealPrivateKey(sealprivatekey),
@@ -60,16 +70,7 @@ class CSP {
         sealDecryptor(sealcontext, sealprivatekey),
         sealBatchEncoder(sealcontext) {
     sealSlotCount = sealBatchEncoder.slot_count();
-    twoPowerAlpha = pow(2, alpha);
-    twoPowerBeta = pow(2, beta);
+    twoPowerAlpha = (int)pow(2, alpha);
+    twoPowerBeta = (int)pow(2, beta);
   }
-
-  // Aggregation - sum all ciphertexts "owned by" entry i.e. all ratings for
-  // user/ all users for ratings for i : U
-  //   for j : V
-  //      aggu[i] += R[i][j]
-  //      aggv[j] += R[i][j]
-  // Reconstitution - Put the aggregation for every entry which has that
-  // user/item
-  //
 };
