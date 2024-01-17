@@ -2,9 +2,8 @@
 echo "Checking formatting ..."
 for FILE in $(git diff --cached --name-only | grep -E '.*\.(c|cpp|h|hpp)')
 do 
-    if [[$(clang-format --style=chromium -i $FILE --dry-run --Werror)]];
+    if [ -z "$(clang-format --style=chromium -i $FILE --dry-run --Werror)" ] ;
     then 
-        echo $clangformatout
         echo "Format error!" 
         echo "Use clang-format --style=chromium -i $FILE" 
         exit 1 
