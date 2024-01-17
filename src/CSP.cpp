@@ -168,6 +168,8 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
   return result;
 }
 
+/// @brief Step 8 - Calculate new U and UHat
+/// @return Pair containing new U and UHat in that order
 std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
 CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   std::vector<seal::Ciphertext> newU;
@@ -211,4 +213,51 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
     uIndex++;
   }
   return std::make_pair(newU, newUHat);
+}
+
+/// @brief Step 8 - Calculate new  and VHat
+/// @return Pair containing new V and VHat in that order
+std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
+CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
+  std::vector<seal::Ciphertext> newV;
+  std::vector<seal::Ciphertext> newVHat;
+
+  // Decrypt and decode maskedVPrime
+  std::vector<seal::Plaintext> maskedVPrimePlaintext;
+  std::vector<std::vector<uint64_t>> maskedVPrimeDecoded;
+  for (int i = 0; i < maskedVPrime.size(); i++) {
+    sealDecryptor.decrypt(maskedVPrime[i], maskedVPrimePlaintext[i]);
+    sealBatchEncoder.decode(maskedVPrimePlaintext[i], maskedVPrimeDecoded[i]);
+  }
+
+  // Calculate new V
+  std::vector<std::vector<uint64_t>> newVDecoded =
+      reconstituteItem(aggregateItem(maskedVPrimeDecoded));
+  std::vector<seal::Plaintext> newVPlaintext;
+  for (int i = 0; i < newVDecoded.size(); i++) {
+    sealBatchEncoder.encode(newVDecoded[i], newVPlaintext[i]);
+    sealEncryptor.encrypt(newVPlaintext[i], newV[i]);
+  }
+
+  // Calculate new VHat
+  int prevItem = -1;
+  int vIndex = 0;
+  // Go through M
+  for (auto [i, j] : CSP::M) {
+    // If not new user, push zero, otherwise push value of newV
+    if (j == prevItem) {
+      std::vector<uint64_t> zeroVector(sealSlotCount, 0ULL);
+      seal::Plaintext zeroPlain;
+      seal::Ciphertext zeroEnc;
+
+      sealBatchEncoder.encode(zeroVector, zeroPlain);
+      sealEncryptor.encrypt(zeroPlain, zeroEnc);
+      newVHat.push_back(zeroEnc);
+    } else {
+      newVHat.push_back(newV.at(vIndex));
+      prevItem = j;
+    }
+    vIndex++;
+  }
+  return std::make_pair(newV, newVHat);
 }
