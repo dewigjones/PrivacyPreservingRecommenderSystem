@@ -46,7 +46,7 @@ std::vector<seal::Ciphertext> CSP::sumF(const std::vector<seal::Ciphertext> f) {
     }
 
     // Scale
-    rprime[i] = std::floor(rprime[i] / twoPowerAlpha);
+    rprime[i] = (uint64_t)std::floor(rprime[i] / twoPowerAlpha);
   }
 
   // Encode, encrypt and return rprime
@@ -166,4 +166,49 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
     result.push_back(A.at(aIndex));
   }
   return result;
+}
+
+std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
+CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
+  std::vector<seal::Ciphertext> newU;
+  std::vector<seal::Ciphertext> newUHat;
+
+  // Decrypt and decode maskedUPrime
+  std::vector<seal::Plaintext> maskedUPrimePlaintext;
+  std::vector<std::vector<uint64_t>> maskedUPrimeDecoded;
+  for (int i = 0; i < maskedUPrime.size(); i++) {
+    sealDecryptor.decrypt(maskedUPrime[i], maskedUPrimePlaintext[i]);
+    sealBatchEncoder.decode(maskedUPrimePlaintext[i], maskedUPrimeDecoded[i]);
+  }
+
+  // Calculate new U
+  std::vector<std::vector<uint64_t>> newUDecoded =
+      reconstituteUser(aggregateUser(maskedUPrimeDecoded));
+  std::vector<seal::Plaintext> newUPlaintext;
+  for (int i = 0; i < newUDecoded.size(); i++) {
+    sealBatchEncoder.encode(newUDecoded[i], newUPlaintext[i]);
+    sealEncryptor.encrypt(newUPlaintext[i], newU[i]);
+  }
+
+  // Calculate new UHat
+  int prevUser = -1;
+  int uIndex = 0;
+  // Go through M
+  for (auto [i, j] : CSP::M) {
+    // If not new user, push zero, otherwise push value of newU
+    if (i == prevUser) {
+      std::vector<uint64_t> zeroVector(sealSlotCount, 0ULL);
+      seal::Plaintext zeroPlain;
+      seal::Ciphertext zeroEnc;
+
+      sealBatchEncoder.encode(zeroVector, zeroPlain);
+      sealEncryptor.encrypt(zeroPlain, zeroEnc);
+      newUHat.push_back(zeroEnc);
+    } else {
+      newUHat.push_back(newU.at(uIndex));
+      prevUser = i;
+    }
+    uIndex++;
+  }
+  return std::make_pair(newU, newUHat);
 }
