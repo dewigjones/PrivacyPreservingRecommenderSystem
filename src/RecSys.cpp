@@ -1,4 +1,6 @@
 #include "RecSys.hpp"
+#include <seal/ciphertext.h>
+#include <vector>
 
 /// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
 /// @return Mask as uint64_t vector
@@ -127,5 +129,17 @@ bool RecSys::gradientDescent() {
     sealEvaluator.add_plain_inplace(VGradientPrime[i], VGradientPrimeMask[i]);
     sealEvaluator.add_plain_inplace(VPrime[i], VPrimeMask[i]);
   }
+
+  // Step 8
+  auto [UPrimePrime, UHatPrimePrime] =
+      CSPInstance->calculateNewUandUHat(UPrime);
+  auto [VPrimePrime, VHatPrimePrime] =
+      CSPInstance->calculateNewVandVHat(VPrime);
+  // Step 9
+  std::vector<seal::Ciphertext> UGradientPrimePrime =
+      CSPInstance->calculateNewUGradient(UGradientPrime);
+  std::vector<seal::Ciphertext> VGradientPrimePrime =
+      CSPInstance->calculateNewVGradient(VGradientPrime);
+
   return true;
 }
