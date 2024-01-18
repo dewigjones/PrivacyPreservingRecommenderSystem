@@ -1,4 +1,5 @@
 #include "CSP.hpp"
+#include <cstdint>
 
 int CSP::generateKeys() {
   return 2;
@@ -181,6 +182,11 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   for (int i = 0; i < maskedUPrime.size(); i++) {
     sealDecryptor.decrypt(maskedUPrime[i], maskedUPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedUPrimePlaintext[i], maskedUPrimeDecoded[i]);
+    // Scale
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedUPrimeDecoded[i][j] =
+          (uint64_t)std::floor(maskedUPrimeDecoded[i][j] / twoPowerAlpha);
+    }
   }
 
   // Calculate new U
@@ -228,6 +234,11 @@ CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
   for (int i = 0; i < maskedVPrime.size(); i++) {
     sealDecryptor.decrypt(maskedVPrime[i], maskedVPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedVPrimePlaintext[i], maskedVPrimeDecoded[i]);
+    // Scale
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedVPrimeDecoded[i][j] =
+          (uint64_t)std::floor(maskedVPrimeDecoded[i][j] / twoPowerAlpha);
+    }
   }
 
   // Calculate new V
@@ -271,6 +282,11 @@ std::vector<seal::Ciphertext> CSP::calculateNewUGradient(
     seal::Plaintext maskedUGradientDecrypt;
     sealDecryptor.decrypt(maskedUGradientPrime[i], maskedUGradientDecrypt);
     sealBatchEncoder.decode(maskedUGradientDecrypt, maskedUGradientDecoded[i]);
+    // Scale
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedUGradientDecoded[i][j] =
+          (uint64_t)std::floor(maskedUGradientDecoded[i][j] / twoPowerAlpha);
+    }
   }
 
   // Get aggregation
@@ -297,6 +313,11 @@ std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
     seal::Plaintext maskedVGradientDecrypt;
     sealDecryptor.decrypt(maskedVGradientPrime[i], maskedVGradientDecrypt);
     sealBatchEncoder.decode(maskedVGradientDecrypt, maskedVGradientDecoded[i]);
+    // Scale
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedVGradientDecoded[i][j] =
+          (uint64_t)std::floor(maskedVGradientDecoded[i][j] / twoPowerAlpha);
+    }
   }
 
   // Get aggregation
