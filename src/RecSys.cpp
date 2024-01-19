@@ -1,5 +1,6 @@
 #include "RecSys.hpp"
 #include <seal/ciphertext.h>
+#include <seal/plaintext.h>
 #include <vector>
 
 /// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
@@ -142,4 +143,72 @@ bool RecSys::gradientDescent() {
       CSPInstance->calculateNewVGradient(VGradientPrime);
 
   return true;
+}
+
+bool RecSys::stoppingCriterionCheck(
+    const std::vector<seal::Ciphertext> UGradient,
+    const std::vector<seal::Ciphertext> VGradient) {
+  std::vector<seal::Ciphertext> UGradientSquare, VGradientSquare;
+  std::vector<std::vector<uint64_t>> UGradientSquareMaskVector,
+      VGradientSquareMaskVector;
+  // Square UGradient and mask
+  for (int i = 0; i < UGradient.size(); i++) {
+    sealEvaluator.square(UGradient[i], UGradientSquare[i]);
+
+    // Generate and add mask
+    UGradientSquareMaskVector[i] = generateMaskFHE();
+    seal::Plaintext UGradientSquareMaskPlaintext;
+    sealBatchEncoder.encode(UGradientSquareMaskVector[i],
+                            UGradientSquareMaskPlaintext);
+    sealEvaluator.add_plain_inplace(UGradientSquare[i],
+                                    UGradientSquareMaskPlaintext);
+  }
+
+  // Square VGradient and mask
+  for (int i = 0; i < VGradient.size(); i++) {
+    sealEvaluator.square(VGradient[i], VGradientSquare[i]);
+    VGradientSquareMaskVector[i] = generateMaskFHE();
+
+    // Generate and add mask
+    VGradientSquareMaskVector[i] = generateMaskFHE();
+    seal::Plaintext VGradientSquareMaskPlaintext;
+    sealBatchEncoder.encode(VGradientSquareMaskVector[i],
+                            VGradientSquareMaskPlaintext);
+    sealEvaluator.add_plain_inplace(VGradientSquare[i],
+                                    VGradientSquareMaskPlaintext);
+  }
+
+  // Sum mask vectors
+  std::vector<uint64_t> UMaskSum(sealSlotCount, 0ULL),
+      VMaskSum(sealSlotCount, 0ULL), Su, Sv;
+
+  for (int i = 0; i < UGradientSquareMaskVector.size(); i++) {
+    for (int j = 0; j < sealSlotCount; j++) {
+      UMaskSum[j] += UGradientSquareMaskVector[i][j];
+    }
+  }
+  for (int i = 0; i < VGradientSquareMaskVector.size(); i++) {
+    for (int j = 0; j < sealSlotCount; j++) {
+      VMaskSum[j] += VGradientSquareMaskVector[i][j];
+    }
+  }
+
+  // Calculate threshold vectors
+  for (int i = 0; i < sealSlotCount; i++) {
+    Su[i] = UMaskSum[i] + threshold;
+    Sv[i] = VMaskSum[i] + threshold;
+  }
+
+  // Get stopping criterion bool vector
+  std::vector<bool> stoppingCriterionVector =
+      CSPInstance->calculateStoppingVector(UGradientSquare, VGradientSquare, Su,
+                                           Sv);
+
+  // If any value is below threshold return true
+  for (bool b : stoppingCriterionVector) {
+    if (b)
+      return true;
+  }
+
+  return false;
 }

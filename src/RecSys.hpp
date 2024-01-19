@@ -1,5 +1,6 @@
 #pragma once
 #include <math.h>
+#include <seal/ciphertext.h>
 #include <seal/seal.h>
 #include "CSP.hpp"
 #include "Ratings.hpp"
@@ -10,6 +11,7 @@
 // Include libraries for FHE mask rng
 #include <limits>
 #include <random>
+#include <vector>
 
 class RecSys {
   // Values and Variables
@@ -33,11 +35,12 @@ class RecSys {
   size_t sealSlotCount;
 
   // Parameters for RS
-  int d;       // Dimension of profiles
-  int alpha;   // Number of integer bits for real numbers
-  int beta;    // Number of fractional bits for real numbers
-  int gamma;   // Number of bits for gradient descent computation
-  int lambda;  // Learning rate
+  int d;          // Dimension of profiles
+  int alpha;      // Number of integer bits for real numbers
+  int beta;       // Number of fractional bits for real numbers
+  int gamma;      // Number of bits for gradient descent computation
+  int lambda;     // Learning rate
+  int threshold;  // Threshold for stopping criterion
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
@@ -49,6 +52,8 @@ class RecSys {
   // Functions
   std::vector<uint64_t> generateMaskFHE();
   uint8_t generateMaskAHE();
+  bool stoppingCriterionCheck(const std::vector<seal::Ciphertext> UGradient,
+                              const std::vector<seal::Ciphertext> VGradient);
 
  public:
   RecSys(CSP* csp, const seal::SEALContext sealcontext)

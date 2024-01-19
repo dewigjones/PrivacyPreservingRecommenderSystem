@@ -2,7 +2,10 @@
 #include <cryptopp/elgamal.h>
 #include <cryptopp/osrng.h>
 #include <math.h>
+#include <seal/ciphertext.h>
 #include <seal/seal.h>
+#include <cstdint>
+#include <vector>
 #include "Ratings.hpp"
 
 class CSP {
@@ -59,6 +62,12 @@ class CSP {
       std::vector<seal::Ciphertext> maskedUGradientPrime);
   std::vector<seal::Ciphertext> calculateNewVGradient(
       std::vector<seal::Ciphertext> maskedVGradientPrime);
+
+  std::vector<bool> calculateStoppingVector(
+      std::vector<seal::Ciphertext> maskedUGradientSquare,
+      std::vector<seal::Ciphertext> maskedVGradientSquare,
+      std::vector<uint64_t> Su,
+      std::vector<uint64_t> Sv);
 
   CSP(seal::SEALContext const& sealcontext,
       seal::PublicKey const& sealhpk,

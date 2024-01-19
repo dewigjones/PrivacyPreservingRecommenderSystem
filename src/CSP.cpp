@@ -334,3 +334,11 @@ std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
 
   return newVGradient;
 }
+
+std::vector<bool> CSP::calculateStoppingVector(
+    std::vector<seal::Ciphertext> maskedUGradientSquare,
+    std::vector<seal::Ciphertext> maskedVGradientSquare,
+    std::vector<uint64_t> Su,
+    std::vector<uint64_t> Sv) {
+  return {true};
+}
