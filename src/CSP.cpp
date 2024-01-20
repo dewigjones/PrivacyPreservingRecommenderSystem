@@ -335,6 +335,9 @@ std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
   return newVGradient;
 }
 
+/// @brief Calculate the boolean vector for whether the Stopping Criterion is
+/// met
+/// @return vector of bools as to whether each entry reaches the threshold
 std::vector<bool> CSP::calculateStoppingVector(
     std::vector<seal::Ciphertext> maskedUGradientSquare,
     std::vector<seal::Ciphertext> maskedVGradientSquare,
