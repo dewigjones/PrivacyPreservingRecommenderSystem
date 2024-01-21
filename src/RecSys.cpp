@@ -145,6 +145,7 @@ bool RecSys::gradientDescent() {
   return true;
 }
 
+/// @brief Check if either the user or item gradient is less than the threshold
 bool RecSys::stoppingCriterionCheck(
     const std::vector<seal::Ciphertext> UGradient,
     const std::vector<seal::Ciphertext> VGradient) {
@@ -199,16 +200,11 @@ bool RecSys::stoppingCriterionCheck(
     Sv[i] = VMaskSum[i] + threshold;
   }
 
-  // Get stopping criterion bool vector
-  std::vector<bool> stoppingCriterionVector =
+  // Get stopping criterion bool pair
+  std::pair<bool, bool> stoppingCriterionPair =
       CSPInstance->calculateStoppingVector(UGradientSquare, VGradientSquare, Su,
                                            Sv);
 
-  // If any value is below threshold return true
-  for (bool b : stoppingCriterionVector) {
-    if (b)
-      return true;
-  }
-
-  return false;
+  // Return true if either the user or item gradient is less than the threshold
+  return (stoppingCriterionPair.first || stoppingCriterionPair.second);
 }

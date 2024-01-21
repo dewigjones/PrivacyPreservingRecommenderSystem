@@ -63,7 +63,7 @@ class CSP {
   std::vector<seal::Ciphertext> calculateNewVGradient(
       std::vector<seal::Ciphertext> maskedVGradientPrime);
 
-  std::vector<bool> calculateStoppingVector(
+  std::pair<bool, bool> calculateStoppingVector(
       std::vector<seal::Ciphertext> maskedUGradientSquare,
       std::vector<seal::Ciphertext> maskedVGradientSquare,
       std::vector<uint64_t> Su,

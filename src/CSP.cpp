@@ -1,5 +1,7 @@
 #include "CSP.hpp"
+#include <seal/plaintext.h>
 #include <cstdint>
+#include <vector>
 
 int CSP::generateKeys() {
   return 2;
@@ -335,13 +337,52 @@ std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
   return newVGradient;
 }
 
-/// @brief Calculate the boolean vector for whether the Stopping Criterion is
-/// met
-/// @return vector of bools as to whether each entry reaches the threshold
-std::vector<bool> CSP::calculateStoppingVector(
+/// @brief Calculate the boolean pair for whether the Stopping Criterion is
+/// met for the user and the items respectivesly
+/// @return pair of bools {User threshold met, Item threshold met}
+std::pair<bool, bool> CSP::calculateStoppingVector(
     std::vector<seal::Ciphertext> maskedUGradientSquare,
     std::vector<seal::Ciphertext> maskedVGradientSquare,
     std::vector<uint64_t> Su,
     std::vector<uint64_t> Sv) {
-  return {true};
+  std::vector<uint64_t> maskedUGradientSquareSum(sealSlotCount, 0ULL),
+      maskedVGradientSquareSum(sealSlotCount, 0ULL);
+  bool UThresholdMet = false;
+  bool VThresholdMet = false;
+
+  // Decrypt and sum maskedUGradientSquared
+  for (int i = 0; i < maskedUGradientSquare.size(); i++) {
+    seal::Plaintext maskedUGradientSquarePlain;
+    std::vector<uint64_t> maskedUGradientSquareDecoded;
+    sealDecryptor.decrypt(maskedUGradientSquare[i], maskedUGradientSquarePlain);
+    sealBatchEncoder.decode(maskedUGradientSquarePlain,
+                            maskedUGradientSquareDecoded);
+
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedUGradientSquareSum[j] += maskedUGradientSquareDecoded[j];
+    }
+  }
+  // Decrypt and sum maskedVGradientSquared
+  for (int i = 0; i < maskedVGradientSquare.size(); i++) {
+    seal::Plaintext maskedVGradientSquarePlain;
+    std::vector<uint64_t> maskedVGradientSquareDecoded;
+    sealDecryptor.decrypt(maskedVGradientSquare[i], maskedVGradientSquarePlain);
+    sealBatchEncoder.decode(maskedVGradientSquarePlain,
+                            maskedVGradientSquareDecoded);
+
+    for (int j = 0; j < sealSlotCount; j++) {
+      maskedVGradientSquareSum[j] += maskedVGradientSquareDecoded[j];
+    }
+  }
+
+  // Set the value of whether the gradient is less than the threshold for both
+  // users and items
+  for (int i = 0; i < sealSlotCount; i++) {
+    if (maskedUGradientSquareSum[i] <= Su[i])
+      UThresholdMet = true;
+    if (maskedVGradientSquareSum[i] <= Sv[i])
+      VThresholdMet = true;
+  }
+
+  return {UThresholdMet, VThresholdMet};
 }
