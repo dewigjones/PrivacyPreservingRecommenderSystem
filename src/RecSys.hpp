@@ -35,20 +35,21 @@ class RecSys {
   size_t sealSlotCount;
 
   // Parameters for RS
-  int d;          // Dimension of profiles
-  int alpha;      // Number of integer bits for real numbers
-  int beta;       // Number of fractional bits for real numbers
-  int gamma;      // Number of bits for gradient descent computation
-  int lambda;     // Learning rate
-  int threshold;  // Threshold for stopping criterion
+  int d;               // Dimension of profiles
+  int alpha;           // Number of integer bits for real numbers
+  int beta;            // Number of fractional bits for real numbers
+  int gamma;           // Number of bits for gradient descent computation
+  int lambda;          // Learning rate
+  int threshold;       // Threshold for stopping criterion
+  int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
+                       // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
-  std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat;
-  ;
+  std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat, UGradient, VGradient;
   seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta,
       scaledLambda, scaledGamma;
-
+  bool stoppingCriterionCheckResult = false;
   // Functions
   std::vector<uint64_t> generateMaskFHE();
   uint8_t generateMaskAHE();

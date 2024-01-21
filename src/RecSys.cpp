@@ -30,118 +30,157 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 }
 
 bool RecSys::gradientDescent() {
-  // Steps 1-2  (Component-Wise Multiplication and Rating Addition)
-  std::vector<std::vector<uint64_t>> epsilonMask(RecSys::M.size(),
-                                                 std::vector<uint64_t>());
-  for (int i = 0; i < RecSys::M.size(); i++) {
-    // f[i] = U[i] * V[i]
-    sealEvaluator.multiply(RecSys::U[i], RecSys::V[i], RecSys::f[i]);
+  int curEpoch = 0;
+  while (!stoppingCriterionCheckResult && curEpoch++ < maxEpochs) {
+    // Steps 1-2  (Component-Wise Multiplication and Rating Addition)
+    std::vector<std::vector<uint64_t>> epsilonMask(RecSys::M.size(),
+                                                   std::vector<uint64_t>());
+    for (int i = 0; i < RecSys::M.size(); i++) {
+      // f[i] = U[i] * V[i]
+      sealEvaluator.multiply(RecSys::U[i], RecSys::V[i], RecSys::f[i]);
 
-    // Scale the rating to the same alpha number of integer bits as U and V
-    seal::Ciphertext scaledRating;
-    sealEvaluator.multiply_plain(RecSys::r[i], twoToTheAlpha, scaledRating);
+      // Scale the rating to the same alpha number of integer bits as U and V
+      seal::Ciphertext scaledRating;
+      sealEvaluator.multiply_plain(RecSys::r[i], twoToTheAlpha, scaledRating);
 
-    // Subtract scaled rating from f
-    sealEvaluator.sub_inplace(RecSys::f[i], scaledRating);
+      // Subtract scaled rating from f
+      sealEvaluator.sub_inplace(RecSys::f[i], scaledRating);
 
-    // Add the mask
-    epsilonMask[i] = generateMaskFHE();
-    seal::Plaintext mask;
-    sealBatchEncoder.encode(epsilonMask[i], mask);
-    sealEvaluator.add_plain_inplace(RecSys::f[i], mask);
-  }
-
-  // Steps 3-4 (Summation)
-  std::vector<seal::Ciphertext> RPrimePrime = CSPInstance->sumF(RecSys::f);
-
-  // Steps 5-7 (Component-Wise Multiplication and Addition)
-  // Step 5 - Remove mask by summing it and then subtracting
-  std::vector<std::vector<uint64_t>> epsilonMaskSum(RecSys::M.size(),
-                                                    std::vector<uint64_t>());
-  for (int i = 0; i < RecSys::M.size(); i++) {
-    // Calculate sum for i entry
-    uint64_t jSum = 0;
-    for (int j = 0; j < d; j++) {
-      jSum += epsilonMask[i][j];
+      // Add the mask
+      epsilonMask[i] = generateMaskFHE();
+      seal::Plaintext mask;
+      sealBatchEncoder.encode(epsilonMask[i], mask);
+      sealEvaluator.add_plain_inplace(RecSys::f[i], mask);
     }
-    // Set all of i and j entry to sum
-    for (int j = 0; j < d; j++) {
-      epsilonMaskSum[i][j] = jSum * pow(2, alpha);
+
+    // Steps 3-4 (Summation)
+    std::vector<seal::Ciphertext> RPrimePrime = CSPInstance->sumF(RecSys::f);
+
+    // Steps 5-7 (Component-Wise Multiplication and Addition)
+    // Step 5 - Remove mask by summing it and then subtracting
+    std::vector<std::vector<uint64_t>> epsilonMaskSum(RecSys::M.size(),
+                                                      std::vector<uint64_t>());
+    for (int i = 0; i < RecSys::M.size(); i++) {
+      // Calculate sum for i entry
+      uint64_t jSum = 0;
+      for (int j = 0; j < d; j++) {
+        jSum += epsilonMask[i][j];
+      }
+      // Set all of i and j entry to sum
+      for (int j = 0; j < d; j++) {
+        epsilonMaskSum[i][j] = jSum * pow(2, alpha);
+      }
+      // Encode and subtract sum of mask
+      seal::Plaintext epsilonMaskSumPlaintext;
+      sealBatchEncoder.encode(epsilonMaskSum[i], epsilonMaskSumPlaintext);
+      sealEvaluator.sub_plain(RPrimePrime[i], epsilonMaskSumPlaintext,
+                              RecSys::R[i]);
     }
-    // Encode and subtract sum of mask
-    seal::Plaintext epsilonMaskSumPlaintext;
-    sealBatchEncoder.encode(epsilonMaskSum[i], epsilonMaskSumPlaintext);
-    sealEvaluator.sub_plain(RPrimePrime[i], epsilonMaskSumPlaintext,
-                            RecSys::R[i]);
+
+    // Steps 6-7 - Calculate U Gradient , V Gradient, U', V' and add Masks
+    std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime, UPrime,
+        VPrime;
+    for (int i = 0; i < RecSys::M.size(); i++) {
+      // UGradient'[i] = v[i] * R[i][j] + twoToTheAlpha * lambda * UHat[i][j]
+      seal::Ciphertext UHatLambdaMul, VHatLambdaMul;
+      sealEvaluator.multiply(RecSys::R[i], RecSys::V[i], UGradientPrime[i]);
+      sealEvaluator.multiply_plain(UHat[i], scaledLambda, UHatLambdaMul);
+      sealEvaluator.add_inplace(UGradientPrime[i], UHatLambdaMul);
+
+      // VGradient'[i] = u * R[i][j] + twoToTheAlpha * lambda * VHat[i][j]
+      sealEvaluator.multiply(RecSys::R[i], RecSys::U[i], VGradientPrime[i]);
+      sealEvaluator.multiply_plain(UHat[i], scaledLambda, VHatLambdaMul);
+      sealEvaluator.add_inplace(UGradientPrime[i], VHatLambdaMul);
+
+      // TODO(Check #1 scaling (alpha, beta))
+      // U'[i] = twoToTheAlphaPlusBeta * UHat[i] - gamma * twoToTheBeta *
+      // UGradient'[i]
+      seal::Ciphertext gammaUGradient, gammaVGradient;
+      sealEvaluator.multiply_plain(UHat[i], twoToTheAlphaPlusBeta, UPrime[i]);
+      sealEvaluator.multiply_plain(UGradientPrime[i], scaledGamma,
+                                   gammaUGradient);
+      sealEvaluator.sub_inplace(UPrime[i], gammaUGradient);
+
+      // V'[i] = twoToTheAlphaPlusBeta * VHat[i] - gamma *
+      // twoToTheBeta * VGradient'[i]
+      sealEvaluator.multiply_plain(VHat[i], twoToTheAlphaPlusBeta, VPrime[i]);
+      sealEvaluator.multiply_plain(VGradientPrime[i], scaledGamma,
+                                   gammaVGradient);
+      sealEvaluator.sub_inplace(VPrime[i], gammaVGradient);
+    }
+    // Step 7 - Generate and add masks
+    std::vector<std::vector<uint64_t>> UGradientPrimeMaskEncodingVector,
+        VGradientPrimeMaskEncodingVector, UPrimeMaskEncodingVector,
+        VPrimeMaskEncodingVector;
+    std::vector<seal::Plaintext> UGradientPrimeMask, VGradientPrimeMask,
+        UPrimeMask, VPrimeMask;
+    std::vector<uint64_t> UMaskSum(sealSlotCount, 0ULL),
+        VMaskSum(sealSlotCount, 0ULL), UGradientMaskSum(sealSlotCount, 0ULL),
+        VGradientMaskSum(sealSlotCount, 0ULL);
+    for (int i = 0; i < RecSys::M.size(); i++) {
+      UPrimeMaskEncodingVector[i] = generateMaskFHE();
+      UGradientPrimeMaskEncodingVector[i] = generateMaskFHE();
+      sealBatchEncoder.encode(UGradientPrimeMaskEncodingVector[i],
+                              UGradientPrimeMask[i]);
+      sealBatchEncoder.encode(UPrimeMaskEncodingVector[i], UPrimeMask[i]);
+
+      sealEvaluator.add_plain_inplace(UGradientPrime[i], UGradientPrimeMask[i]);
+      sealEvaluator.add_plain_inplace(UPrime[i], UPrimeMask[i]);
+
+      VPrimeMaskEncodingVector[i] = generateMaskFHE();
+      VGradientPrimeMaskEncodingVector[i] = generateMaskFHE();
+      sealBatchEncoder.encode(VGradientPrimeMaskEncodingVector[i],
+                              VGradientPrimeMask[i]);
+      sealBatchEncoder.encode(VPrimeMaskEncodingVector[i], VPrimeMask[i]);
+
+      sealEvaluator.add_plain_inplace(VGradientPrime[i], VGradientPrimeMask[i]);
+      sealEvaluator.add_plain_inplace(VPrime[i], VPrimeMask[i]);
+      for (int j = 0; j < sealSlotCount; j++) {
+        UMaskSum[j] += UPrimeMaskEncodingVector[i][j];
+        VMaskSum[j] += VPrimeMaskEncodingVector[i][j];
+        UGradientMaskSum[j] += UGradientPrimeMaskEncodingVector[i][j];
+        VGradientMaskSum[j] += VGradientPrimeMaskEncodingVector[i][j];
+      }
+    }
+
+    // Step 8
+    auto [UPrimePrime, UHatPrimePrime] =
+        CSPInstance->calculateNewUandUHat(UPrime);
+    auto [VPrimePrime, VHatPrimePrime] =
+        CSPInstance->calculateNewVandVHat(VPrime);
+    // Step 9
+    std::vector<seal::Ciphertext> UGradientPrimePrime =
+        CSPInstance->calculateNewUGradient(UGradientPrime);
+    std::vector<seal::Ciphertext> VGradientPrimePrime =
+        CSPInstance->calculateNewVGradient(VGradientPrime);
+
+    // Step 10 - Remove masks
+    // Sum masks
+    seal::Plaintext UMaskSumPlain, VMaskSumPlain, UGradientMaskSumPlain,
+        VGradientMaskSumPlain;
+    sealBatchEncoder.encode(UMaskSum, UMaskSumPlain);
+    sealBatchEncoder.encode(VMaskSum, VMaskSumPlain);
+    sealBatchEncoder.encode(UGradientMaskSum, UGradientMaskSumPlain);
+    sealBatchEncoder.encode(VGradientMaskSum, VGradientMaskSumPlain);
+    for (int i = 0; i < UPrimePrime.size(); i++) {
+      sealEvaluator.sub_plain(UPrimePrime[i], UMaskSumPlain, U[i]);
+      sealEvaluator.sub_plain(UHatPrimePrime[i], UMaskSumPlain, UHat[i]);
+    }
+    for (int i = 0; i < VPrimePrime.size(); i++) {
+      sealEvaluator.sub_plain(VPrimePrime[i], VMaskSumPlain, V[i]);
+      sealEvaluator.sub_plain(VHatPrimePrime[i], VMaskSumPlain, VHat[i]);
+    }
+    for (int i = 0; i < UGradientPrimePrime.size(); i++) {
+      sealEvaluator.sub_plain(UGradientPrimePrime[i], UGradientMaskSumPlain,
+                              UGradient[i]);
+    }
+    for (int i = 0; i < VGradientPrimePrime.size(); i++) {
+      sealEvaluator.sub_plain(VGradientPrimePrime[i], VGradientMaskSumPlain,
+                              VGradient[i]);
+    }
+    stoppingCriterionCheckResult =
+        RecSys::stoppingCriterionCheck(UGradient, VGradient);
   }
-
-  // Steps 6-7 - Calculate U Gradient , V Gradient, U', V' and add Masks
-  std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime, UPrime, VPrime;
-  for (int i = 0; i < RecSys::M.size(); i++) {
-    // UGradient'[i] = v[i] * R[i][j] + twoToTheAlpha * lambda * UHat[i][j]
-    seal::Ciphertext UHatLambdaMul, VHatLambdaMul;
-    sealEvaluator.multiply(RecSys::R[i], RecSys::V[i], UGradientPrime[i]);
-    sealEvaluator.multiply_plain(UHat[i], scaledLambda, UHatLambdaMul);
-    sealEvaluator.add_inplace(UGradientPrime[i], UHatLambdaMul);
-
-    // VGradient'[i] = u * R[i][j] + twoToTheAlpha * lambda * VHat[i][j]
-    sealEvaluator.multiply(RecSys::R[i], RecSys::U[i], VGradientPrime[i]);
-    sealEvaluator.multiply_plain(UHat[i], scaledLambda, VHatLambdaMul);
-    sealEvaluator.add_inplace(UGradientPrime[i], VHatLambdaMul);
-
-    // TODO(Check #1 scaling (alpha, beta))
-    // U'[i] = twoToTheAlphaPlusBeta * UHat[i] - gamma * twoToTheBeta *
-    // UGradient'[i]
-    seal::Ciphertext gammaUGradient, gammaVGradient;
-    sealEvaluator.multiply_plain(UHat[i], twoToTheAlphaPlusBeta, UPrime[i]);
-    sealEvaluator.multiply_plain(UGradientPrime[i], scaledGamma,
-                                 gammaUGradient);
-    sealEvaluator.sub_inplace(UPrime[i], gammaUGradient);
-
-    // V'[i] = twoToTheAlphaPlusBeta * VHat[i] - gamma *
-    // twoToTheBeta * VGradient'[i]
-    sealEvaluator.multiply_plain(VHat[i], twoToTheAlphaPlusBeta, VPrime[i]);
-    sealEvaluator.multiply_plain(VGradientPrime[i], scaledGamma,
-                                 gammaVGradient);
-    sealEvaluator.sub_inplace(VPrime[i], gammaVGradient);
-  }
-  // Step 7 - Generate and add masks
-  std::vector<std::vector<uint64_t>> UGradientPrimeMaskEncodingVector,
-      VGradientPrimeMaskEncodingVector, UPrimeMaskEncodingVector,
-      VPrimeMaskEncodingVector;
-  std::vector<seal::Plaintext> UGradientPrimeMask, VGradientPrimeMask,
-      UPrimeMask, VPrimeMask;
-  for (int i = 0; i < RecSys::M.size(); i++) {
-    UPrimeMaskEncodingVector[i] = generateMaskFHE();
-    UGradientPrimeMaskEncodingVector[i] = generateMaskFHE();
-    sealBatchEncoder.encode(UGradientPrimeMaskEncodingVector[i],
-                            UGradientPrimeMask[i]);
-    sealBatchEncoder.encode(UPrimeMaskEncodingVector[i], UPrimeMask[i]);
-
-    sealEvaluator.add_plain_inplace(UGradientPrime[i], UGradientPrimeMask[i]);
-    sealEvaluator.add_plain_inplace(UPrime[i], UPrimeMask[i]);
-
-    VPrimeMaskEncodingVector[i] = generateMaskFHE();
-    VGradientPrimeMaskEncodingVector[i] = generateMaskFHE();
-    sealBatchEncoder.encode(VGradientPrimeMaskEncodingVector[i],
-                            VGradientPrimeMask[i]);
-    sealBatchEncoder.encode(VPrimeMaskEncodingVector[i], VPrimeMask[i]);
-
-    sealEvaluator.add_plain_inplace(VGradientPrime[i], VGradientPrimeMask[i]);
-    sealEvaluator.add_plain_inplace(VPrime[i], VPrimeMask[i]);
-  }
-
-  // Step 8
-  auto [UPrimePrime, UHatPrimePrime] =
-      CSPInstance->calculateNewUandUHat(UPrime);
-  auto [VPrimePrime, VHatPrimePrime] =
-      CSPInstance->calculateNewVandVHat(VPrime);
-  // Step 9
-  std::vector<seal::Ciphertext> UGradientPrimePrime =
-      CSPInstance->calculateNewUGradient(UGradientPrime);
-  std::vector<seal::Ciphertext> VGradientPrimePrime =
-      CSPInstance->calculateNewVGradient(VGradientPrime);
-
   return true;
 }
 
