@@ -6,6 +6,7 @@
 #include <seal/secretkey.h>
 #include <cstddef>
 #include <iostream>
+#include <memory>
 #include <string>
 #include "CSP.hpp"
 #include "seal/seal.h"
@@ -27,8 +28,8 @@ int main() {
 
   std::cout << "Hello World, public key size is " << public_key.data().size()
             << std::endl;
-  auto a = new CSP(context, public_key, secret_key);
-  std::cout << a->generateKeys() << std::endl;
+  auto CSPInstance = std::make_shared<CSP>(context, public_key, secret_key);
+  std::cout << CSPInstance->generateKeys() << std::endl;
 
   return 0;
 }

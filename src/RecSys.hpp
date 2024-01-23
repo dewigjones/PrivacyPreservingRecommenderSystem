@@ -2,6 +2,7 @@
 #include <math.h>
 #include <seal/ciphertext.h>
 #include <seal/seal.h>
+#include <memory>
 #include "CSP.hpp"
 #include "Ratings.hpp"
 
@@ -15,7 +16,7 @@
 
 class RecSys {
   // Values and Variables
-  CSP* CSPInstance;
+  std::shared_ptr<CSP> CSPInstance;
   CryptoPP::AutoSeededRandomPool rng;
   std::vector<EncryptedRating> ratings;
   std::vector<int> users;
@@ -57,7 +58,7 @@ class RecSys {
                               const std::vector<seal::Ciphertext> VGradient);
 
  public:
-  RecSys(CSP* csp, const seal::SEALContext sealcontext)
+  RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext sealcontext)
       : CSPInstance(csp),
         sealContext(sealcontext),
         sealEvaluator(sealcontext),
