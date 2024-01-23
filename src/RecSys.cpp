@@ -31,7 +31,7 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 
 bool RecSys::gradientDescent() {
   int curEpoch = 0;
-  while (!stoppingCriterionCheckResult && curEpoch++ < maxEpochs) {
+  while (curEpoch++ < maxEpochs && !stoppingCriterionCheckResult) {
     // Steps 1-2  (Component-Wise Multiplication and Rating Addition)
     std::vector<std::vector<uint64_t>> epsilonMask(RecSys::M.size(),
                                                    std::vector<uint64_t>());
@@ -68,7 +68,7 @@ bool RecSys::gradientDescent() {
       }
       // Set all of i and j entry to sum
       for (int j = 0; j < d; j++) {
-        epsilonMaskSum[i][j] = jSum * pow(2, alpha);
+        epsilonMaskSum[i][j] = jSum * static_cast<uint64_t>(pow(2, alpha));
       }
       // Encode and subtract sum of mask
       seal::Plaintext epsilonMaskSumPlaintext;
@@ -186,14 +186,14 @@ bool RecSys::gradientDescent() {
 
 /// @brief Check if either the user or item gradient is less than the threshold
 bool RecSys::stoppingCriterionCheck(
-    const std::vector<seal::Ciphertext> UGradient,
-    const std::vector<seal::Ciphertext> VGradient) {
+    const std::vector<seal::Ciphertext>& UGradientParam,
+    const std::vector<seal::Ciphertext>& VGradientParam) {
   std::vector<seal::Ciphertext> UGradientSquare, VGradientSquare;
   std::vector<std::vector<uint64_t>> UGradientSquareMaskVector,
       VGradientSquareMaskVector;
   // Square UGradient and mask
-  for (int i = 0; i < UGradient.size(); i++) {
-    sealEvaluator.square(UGradient[i], UGradientSquare[i]);
+  for (int i = 0; i < UGradientParam.size(); i++) {
+    sealEvaluator.square(UGradientParam[i], UGradientSquare[i]);
 
     // Generate and add mask
     UGradientSquareMaskVector[i] = generateMaskFHE();
@@ -205,8 +205,8 @@ bool RecSys::stoppingCriterionCheck(
   }
 
   // Square VGradient and mask
-  for (int i = 0; i < VGradient.size(); i++) {
-    sealEvaluator.square(VGradient[i], VGradientSquare[i]);
+  for (int i = 0; i < VGradientParam.size(); i++) {
+    sealEvaluator.square(VGradientParam[i], VGradientSquare[i]);
     VGradientSquareMaskVector[i] = generateMaskFHE();
 
     // Generate and add mask
@@ -246,4 +246,43 @@ bool RecSys::stoppingCriterionCheck(
 
   // Return true if either the user or item gradient is less than the threshold
   return (stoppingCriterionPair.first || stoppingCriterionPair.second);
+}
+RecSys::RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext)
+    : CSPInstance(csp),
+      gen(rd()),
+      sealContext(sealcontext),
+      sealEvaluator(sealcontext),
+      sealBatchEncoder(sealcontext) {
+  // Save slot count
+  sealSlotCount = sealBatchEncoder.slot_count();
+
+  // Encode 2^alpha
+  std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL),
+      scaledLambdaEncodingVector(sealSlotCount, 0ULL);
+  for (int i = 0; i < sealSlotCount; i++) {
+    twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
+    scaledLambdaEncodingVector[i] = (unsigned long long)pow(2, alpha) * lambda;
+  }
+  sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
+  sealBatchEncoder.encode(scaledLambdaEncodingVector, scaledLambda);
+
+  // Encode 2^beta
+  std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL),
+      scaledGammaEncodingVector(sealSlotCount, 0ULL);
+  for (int i = 0; i < sealSlotCount; i++) {
+    twoToTheBetaEncodingVector[i] = (unsigned long long)pow(2, beta);
+    scaledGammaEncodingVector[i] = (unsigned long long)pow(2, beta) * gamma;
+  }
+  sealBatchEncoder.encode(twoToTheBetaEncodingVector, twoToTheBeta);
+  sealBatchEncoder.encode(scaledGammaEncodingVector, scaledGamma);
+
+  // Encode 2^(alpha+beta)
+  std::vector<uint64_t> twoToTheAlphaPlusBetaEncodingVector(sealSlotCount,
+                                                            0ULL);
+  for (int i = 0; i < sealSlotCount; i++) {
+    twoToTheAlphaPlusBetaEncodingVector[i] =
+        (unsigned long long)pow(2, alpha + beta);
+  }
+  sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
+                          twoToTheAlphaPlusBeta);
 }

@@ -50,54 +50,17 @@ class RecSys {
   std::vector<seal::Ciphertext> R, r, f, U, V, UHat, VHat, UGradient, VGradient;
   seal::Plaintext twoToTheAlpha, twoToTheBeta, twoToTheAlphaPlusBeta,
       scaledLambda, scaledGamma;
+
   bool stoppingCriterionCheckResult = false;
   // Functions
   std::vector<uint64_t> generateMaskFHE();
   uint8_t generateMaskAHE();
-  bool stoppingCriterionCheck(const std::vector<seal::Ciphertext> UGradient,
-                              const std::vector<seal::Ciphertext> VGradient);
+  bool stoppingCriterionCheck(
+      const std::vector<seal::Ciphertext>& UGradientParam,
+      const std::vector<seal::Ciphertext>& VGradientParam);
 
  public:
-  RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext sealcontext)
-      : CSPInstance(csp),
-        sealContext(sealcontext),
-        sealEvaluator(sealcontext),
-        sealBatchEncoder(sealcontext),
-        gen(rd()) {
-    // Save slot count
-    sealSlotCount = sealBatchEncoder.slot_count();
-
-    // Encode 2^alpha
-    std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL),
-        scaledLambdaEncodingVector(sealSlotCount, 0ULL);
-    for (int i = 0; i < sealSlotCount; i++) {
-      twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
-      scaledLambdaEncodingVector[i] =
-          (unsigned long long)pow(2, alpha) * lambda;
-    }
-    sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
-    sealBatchEncoder.encode(scaledLambdaEncodingVector, scaledLambda);
-
-    // Encode 2^beta
-    std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL),
-        scaledGammaEncodingVector(sealSlotCount, 0ULL);
-    for (int i = 0; i < sealSlotCount; i++) {
-      twoToTheBetaEncodingVector[i] = (unsigned long long)pow(2, beta);
-      scaledGammaEncodingVector[i] = (unsigned long long)pow(2, beta) * gamma;
-    }
-    sealBatchEncoder.encode(twoToTheBetaEncodingVector, twoToTheBeta);
-    sealBatchEncoder.encode(scaledGammaEncodingVector, scaledGamma);
-
-    // Encode 2^(alpha+beta)
-    std::vector<uint64_t> twoToTheAlphaPlusBetaEncodingVector(sealSlotCount,
-                                                              0ULL);
-    for (int i = 0; i < sealSlotCount; i++) {
-      twoToTheAlphaPlusBetaEncodingVector[i] =
-          (unsigned long long)pow(2, alpha + beta);
-    }
-    sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
-                            twoToTheAlphaPlusBeta);
-  }
+  RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext);
 
   bool uploadRating(EncryptedRatingAHE rating);
   int getPredictedRating(int userID, int itemID);
