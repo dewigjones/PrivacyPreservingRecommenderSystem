@@ -1,3 +1,8 @@
+#include <seal/batchencoder.h>
+#include <seal/ciphertext.h>
+#include <seal/encryptor.h>
+#include <seal/plaintext.h>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -5,22 +10,26 @@
 #include <string>
 #include <vector>
 #include "CSP.hpp"
+#include "RecSys.hpp"
 #include "seal/seal.h"
 
 int main() {
   // Set up seal
   seal::EncryptionParameters params(seal::scheme_type::bgv);
-  size_t poly_modulus_degree = 16384;
+  size_t poly_modulus_degree = 8192;
   params.set_poly_modulus_degree(poly_modulus_degree);
   params.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
   params.set_plain_modulus(
-      seal::PlainModulus::Batching(poly_modulus_degree, 60));
+      seal::PlainModulus::Batching(poly_modulus_degree, 20));
   seal::SEALContext context(params);
 
   seal::KeyGenerator keygen(context);
   seal::SecretKey secret_key = keygen.secret_key();
   seal::PublicKey public_key;
   keygen.create_public_key(public_key);
+
+  seal::Encryptor encryptor(context, public_key);
+  seal::BatchEncoder batchEncoder(context);
 
   std::cout << "Hello World, public key size is " << public_key.data().size()
             << std::endl;
@@ -34,8 +43,7 @@ int main() {
   int maxLines = 100;
   int curLine = 0;
   // Use read file stream
-  std::ifstream fileReader("./res/u1.base");
-  if (fileReader.is_open()) {
+  if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
     std::string line;
 
     // Get each line
@@ -70,5 +78,28 @@ int main() {
   } else {
     std::cout << "Could not open file" << std::endl;
   }
+
+  // Encrypt ratings
+  std::vector<seal::Ciphertext> encryptedRatings;
+  for (int rating : ratings) {
+    std::vector<uint64_t> ratingEncodingVector(batchEncoder.slot_count(), 0ULL);
+    ratingEncodingVector[0] = -rating;
+
+    seal::Plaintext ratingPlain;
+    seal::Ciphertext ratingEnc;
+    batchEncoder.encode(ratingEncodingVector, ratingPlain);
+    encryptor.encrypt(ratingPlain, ratingEnc);
+
+    encryptedRatings.push_back(ratingEnc);
+  }
+
+  // Inject data into RecSys
+  std::unique_ptr<RecSys> recSysInstance =
+      std::make_unique<RecSys>(CSPInstance, context);
+  recSysInstance->setM(curM);
+  recSysInstance->setRatings(encryptedRatings);
+
+  recSysInstance->gradientDescent();
+
   return 0;
 }

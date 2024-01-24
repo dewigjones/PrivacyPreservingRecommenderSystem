@@ -3,6 +3,7 @@
 #include <seal/ciphertext.h>
 #include <seal/seal.h>
 #include <memory>
+#include <vector>
 #include "CSP.hpp"
 #include "Ratings.hpp"
 
@@ -12,7 +13,6 @@
 // Include libraries for FHE mask rng
 #include <limits>
 #include <random>
-#include <vector>
 
 class RecSys {
   // Values and Variables
@@ -29,7 +29,7 @@ class RecSys {
   std::mt19937_64 gen;
   std::uniform_int_distribution<unsigned long long> distr;
 
-  // SEAL values and Variables
+  // SEAL values and variables
   seal::SEALContext sealContext;
   seal::Evaluator sealEvaluator;
   seal::BatchEncoder sealBatchEncoder;
@@ -37,11 +37,11 @@ class RecSys {
 
   // Parameters for RS
   int d;               // Dimension of profiles
-  int alpha;           // Number of integer bits for real numbers
-  int beta;            // Number of fractional bits for real numbers
-  int gamma;           // Number of bits for gradient descent computation
-  int lambda;          // Learning rate
-  int threshold;       // Threshold for stopping criterion
+  int alpha = 40;      // Number of integer bits for real numbers
+  int beta = 20;       // Number of fractional bits for real numbers
+  int gamma = 10;      // Number of bits for gradient descent computation
+  int lambda = 1;      // Learning rate
+  int threshold = 10;  // Threshold for stopping criterion
   int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
                        // regardless of if stopping criterion met
 
@@ -66,4 +66,7 @@ class RecSys {
   int getPredictedRating(int userID, int itemID);
   std::vector<EncryptedRating> getPredictiedRatings(int userID);
   bool gradientDescent();
+
+  void setM(const std::vector<std::pair<int, int>> providedM);
+  void setRatings(const std::vector<seal::Ciphertext> providedRatings);
 };

@@ -69,7 +69,7 @@ class CSP {
       std::vector<uint64_t> Su,
       std::vector<uint64_t> Sv);
 
-  CSP(seal::SEALContext const& sealcontext,
+  CSP(seal::SEALContext& sealcontext,
       seal::PublicKey const& sealhpk,
       seal::SecretKey const& sealprivatekey)
       : sealContext(sealcontext),

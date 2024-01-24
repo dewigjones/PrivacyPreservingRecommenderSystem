@@ -247,6 +247,8 @@ bool RecSys::stoppingCriterionCheck(
   // Return true if either the user or item gradient is less than the threshold
   return (stoppingCriterionPair.first || stoppingCriterionPair.second);
 }
+
+/// RecSys Constructor
 RecSys::RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext)
     : CSPInstance(csp),
       gen(rd()),
@@ -285,4 +287,14 @@ RecSys::RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext)
   }
   sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
                           twoToTheAlphaPlusBeta);
+}
+
+/// @brief Set the space of ratings
+void RecSys::setM(const std::vector<std::pair<int, int>> providedM) {
+  M = providedM;
+}
+
+/// Set the encrypted ratings vector
+void RecSys::setRatings(const std::vector<seal::Ciphertext> providedRatings) {
+  r = providedRatings;
 }
