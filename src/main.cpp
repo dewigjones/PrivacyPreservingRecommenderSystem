@@ -40,13 +40,15 @@ int main() {
   // Declare vectors to hold input
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
+  int maxLines = 100;
+  int curLine = 0;
   // Use read file stream
   std::ifstream fileReader("./res/u1.base");
   if (fileReader.is_open()) {
     std::string line;
 
     // Get each line
-    while (std::getline(fileReader, line)) {
+    while (curLine++ < maxLines && std::getline(fileReader, line)) {
       std::string column;       // Hold current column entry in line
       int columnIndex = 0;      // Count which column of line we're in
       int user, movie, rating;  // Variables for output
