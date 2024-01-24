@@ -1,15 +1,6 @@
-#include <seal/context.h>
-#include <seal/encryptionparams.h>
-#include <seal/keygenerator.h>
-#include <seal/modulus.h>
-#include <seal/publickey.h>
-#include <seal/secretkey.h>
-#include <cstddef>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
