@@ -5,9 +5,14 @@
 #include <seal/publickey.h>
 #include <seal/secretkey.h>
 #include <cstddef>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <memory>
+#include <ostream>
+#include <sstream>
 #include <string>
+#include <vector>
 #include "CSP.hpp"
 #include "seal/seal.h"
 
@@ -31,5 +36,46 @@ int main() {
   auto CSPInstance = std::make_shared<CSP>(context, public_key, secret_key);
   std::cout << CSPInstance->generateKeys() << std::endl;
 
+  // Read test data
+  // Declare vectors to hold input
+  std::vector<std::pair<int, int>> curM;
+  std::vector<int> ratings;
+  // Use read file stream
+  std::ifstream fileReader("./res/u1.base");
+  if (fileReader.is_open()) {
+    std::string line;
+
+    // Get each line
+    while (std::getline(fileReader, line)) {
+      std::string column;       // Hold current column entry in line
+      int columnIndex = 0;      // Count which column of line we're in
+      int user, movie, rating;  // Variables for output
+
+      // Create a stringstream for current line so we can use getline to split
+      // by delimiter
+      std::stringstream ss;
+      ss.str(line);
+
+      // Separate line by tab delimiter
+      while (std::getline(ss, column, '\t')) {
+        // Assign the entries by column to the correct variable, ignoring the
+        // timestamp and coverting to int
+        if (columnIndex % 4 == 0)
+          user = std::stoi(column);
+        if (columnIndex % 4 == 1)
+          movie = std::stoi(column);
+        if (columnIndex % 4 == 2)
+          rating = std::stoi(column);
+        columnIndex++;
+      }
+
+      // Push current line to our vectors
+      curM.push_back(std::make_pair(user, movie));
+      ratings.push_back(rating);
+    }
+    fileReader.close();
+  } else {
+    std::cout << "Could not open file" << std::endl;
+  }
   return 0;
 }
