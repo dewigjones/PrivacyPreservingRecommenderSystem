@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include "CSP.hpp"
+#include "MessageHandler.hpp"
 #include "RecSys.hpp"
 #include "seal/seal.h"
 
