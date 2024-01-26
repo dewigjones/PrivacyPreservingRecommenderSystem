@@ -1,7 +1,3 @@
-#include <seal/batchencoder.h>
-#include <seal/ciphertext.h>
-#include <seal/encryptor.h>
-#include <seal/plaintext.h>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -31,10 +27,13 @@ int main() {
 
   seal::Encryptor encryptor(context, public_key);
   seal::BatchEncoder batchEncoder(context);
-
+  std::shared_ptr<MessageHandler> messageHandlerInstance{};
+  messageHandlerInstance->last_write_size =
+      params.save(messageHandlerInstance->parms_stream);
   std::cout << "Hello World, public key size is " << public_key.data().size()
             << std::endl;
-  auto CSPInstance = std::make_shared<CSP>(context, public_key, secret_key);
+  auto CSPInstance = std::make_shared<CSP>(messageHandlerInstance, context,
+                                           public_key, secret_key);
   std::cout << CSPInstance->generateKeys() << std::endl;
 
   // Read test data
@@ -96,7 +95,7 @@ int main() {
 
   // Inject data into RecSys
   std::unique_ptr<RecSys> recSysInstance =
-      std::make_unique<RecSys>(CSPInstance, context);
+      std::make_unique<RecSys>(CSPInstance, messageHandlerInstance, context);
   recSysInstance->setM(curM);
   recSysInstance->setRatings(encryptedRatings);
 

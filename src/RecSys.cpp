@@ -1,7 +1,9 @@
 #include "RecSys.hpp"
 #include <seal/ciphertext.h>
 #include <seal/plaintext.h>
+#include <memory>
 #include <vector>
+#include "MessageHandler.hpp"
 
 /// @brief Generate Random Mask for FHE encoded plaintext/ciphertexts
 /// @return Mask as uint64_t vector
@@ -249,8 +251,11 @@ bool RecSys::stoppingCriterionCheck(
 }
 
 /// RecSys Constructor
-RecSys::RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext)
-    : CSPInstance(csp),
+RecSys::RecSys(std::shared_ptr<CSP> csp,
+               std::shared_ptr<MessageHandler> messagehandler,
+               const seal::SEALContext& sealcontext)
+    : MessageHandlerInstance(messagehandler),
+      CSPInstance(csp),
       gen(rd()),
       sealContext(sealcontext),
       sealEvaluator(sealcontext),

@@ -5,7 +5,9 @@
 #include <seal/ciphertext.h>
 #include <seal/seal.h>
 #include <cstdint>
+#include <memory>
 #include <vector>
+#include "MessageHandler.hpp"
 #include "Ratings.hpp"
 
 class CSP {
@@ -22,6 +24,7 @@ class CSP {
   CryptoPP::ElGamal::Encryptor ahe_Encryptor;
 
   // SEAL FHE values and variables
+  std::shared_ptr<MessageHandler> messageHandlerInstance;
   seal::SEALContext sealContext;
   seal::PublicKey sealHpk;
   seal::SecretKey sealPrivateKey;
@@ -69,10 +72,12 @@ class CSP {
       std::vector<uint64_t> Su,
       std::vector<uint64_t> Sv);
 
-  CSP(seal::SEALContext& sealcontext,
+  CSP(std::shared_ptr<MessageHandler> messagehandler,
+      seal::SEALContext& sealcontext,
       seal::PublicKey const& sealhpk,
       seal::SecretKey const& sealprivatekey)
-      : sealContext(sealcontext),
+      : messageHandlerInstance(messagehandler),
+        sealContext(sealcontext),
         sealHpk(sealhpk),
         sealPrivateKey(sealprivatekey),
         sealEncryptor(sealcontext, sealhpk),

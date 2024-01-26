@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include "CSP.hpp"
+#include "MessageHandler.hpp"
 #include "Ratings.hpp"
 
 // AHE libraries
@@ -17,6 +18,7 @@
 class RecSys {
   // Values and Variables
   std::shared_ptr<CSP> CSPInstance;
+  std::shared_ptr<MessageHandler> MessageHandlerInstance;
   CryptoPP::AutoSeededRandomPool rng;
   std::vector<EncryptedRating> ratings;
   std::vector<int> users;
@@ -60,7 +62,9 @@ class RecSys {
       const std::vector<seal::Ciphertext>& VGradientParam);
 
  public:
-  RecSys(std::shared_ptr<CSP> csp, const seal::SEALContext& sealcontext);
+  RecSys(std::shared_ptr<CSP> csp,
+         std::shared_ptr<MessageHandler> messagehandler,
+         const seal::SEALContext& sealcontext);
 
   bool uploadRating(EncryptedRatingAHE rating);
   int getPredictedRating(int userID, int itemID);
