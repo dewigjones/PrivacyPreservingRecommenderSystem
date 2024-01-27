@@ -1,6 +1,8 @@
 #include "RecSys.hpp"
 #include <seal/ciphertext.h>
 #include <seal/plaintext.h>
+#include <sys/types.h>
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include "MessageHandler.hpp"
@@ -267,8 +269,9 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
   std::vector<uint64_t> twoToTheAlphaEncodingVector(sealSlotCount, 0ULL),
       scaledLambdaEncodingVector(sealSlotCount, 0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
-    twoToTheAlphaEncodingVector[i] = (unsigned long long)pow(2, alpha);
-    scaledLambdaEncodingVector[i] = (unsigned long long)pow(2, alpha) * lambda;
+    twoToTheAlphaEncodingVector[i] = static_cast<uint64_t>(pow(2, alpha));
+    scaledLambdaEncodingVector[i] =
+        static_cast<uint64_t>(pow(2, alpha) * lambda);
   }
   sealBatchEncoder.encode(twoToTheAlphaEncodingVector, twoToTheAlpha);
   sealBatchEncoder.encode(scaledLambdaEncodingVector, scaledLambda);
@@ -277,8 +280,8 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
   std::vector<uint64_t> twoToTheBetaEncodingVector(sealSlotCount, 0ULL),
       scaledGammaEncodingVector(sealSlotCount, 0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
-    twoToTheBetaEncodingVector[i] = (unsigned long long)pow(2, beta);
-    scaledGammaEncodingVector[i] = (unsigned long long)pow(2, beta) * gamma;
+    twoToTheBetaEncodingVector[i] = static_cast<uint64_t>(pow(2, beta));
+    scaledGammaEncodingVector[i] = static_cast<uint64_t>(pow(2, beta) * gamma);
   }
   sealBatchEncoder.encode(twoToTheBetaEncodingVector, twoToTheBeta);
   sealBatchEncoder.encode(scaledGammaEncodingVector, scaledGamma);
@@ -288,7 +291,7 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
                                                             0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
     twoToTheAlphaPlusBetaEncodingVector[i] =
-        (unsigned long long)pow(2, alpha + beta);
+        static_cast<uint>(pow(2, alpha + beta));
   }
   sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
                           twoToTheAlphaPlusBeta);

@@ -1,7 +1,16 @@
+#include <seal/context.h>
+#include <seal/encryptionparams.h>
+#include <seal/keygenerator.h>
+#include <seal/modulus.h>
+#include <seal/publickey.h>
+#include <seal/secretkey.h>
+#include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -12,14 +21,13 @@
 
 int main() {
   // Set up seal
-  seal::EncryptionParameters params(seal::scheme_type::bgv);
-  size_t poly_modulus_degree = 8192;
-  params.set_poly_modulus_degree(poly_modulus_degree);
-  params.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
-  params.set_plain_modulus(
+  seal::EncryptionParameters parms(seal::scheme_type::bgv);
+  size_t poly_modulus_degree = 16384;
+  parms.set_poly_modulus_degree(poly_modulus_degree);
+  parms.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
+  parms.set_plain_modulus(
       seal::PlainModulus::Batching(poly_modulus_degree, 20));
-  seal::SEALContext context(params);
-
+  seal::SEALContext context(parms);
   seal::KeyGenerator keygen(context);
   seal::SecretKey secret_key = keygen.secret_key();
   seal::PublicKey public_key;
@@ -28,8 +36,8 @@ int main() {
   seal::Encryptor encryptor(context, public_key);
   seal::BatchEncoder batchEncoder(context);
   std::shared_ptr<MessageHandler> messageHandlerInstance{};
-  messageHandlerInstance->last_write_size =
-      params.save(messageHandlerInstance->parms_stream);
+  // messageHandlerInstance->last_write_size =
+  //     parms.save(messageHandlerInstance->parms_stream);
   std::cout << "Hello World, public key size is " << public_key.data().size()
             << std::endl;
   auto CSPInstance = std::make_shared<CSP>(messageHandlerInstance, context,
@@ -83,7 +91,7 @@ int main() {
   std::vector<seal::Ciphertext> encryptedRatings;
   for (int rating : ratings) {
     std::vector<uint64_t> ratingEncodingVector(batchEncoder.slot_count(), 0ULL);
-    ratingEncodingVector[0] = -rating;
+    ratingEncodingVector[0] = static_cast<uint64_t>(rating);
 
     seal::Plaintext ratingPlain;
     seal::Ciphertext ratingEnc;
