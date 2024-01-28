@@ -26,7 +26,7 @@ int main() {
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
   parms.set_plain_modulus(
-      seal::PlainModulus::Batching(poly_modulus_degree, 20));
+      seal::PlainModulus::Batching(poly_modulus_degree, 60));
   seal::SEALContext context(parms);
   seal::KeyGenerator keygen(context);
   seal::SecretKey secret_key = keygen.secret_key();
