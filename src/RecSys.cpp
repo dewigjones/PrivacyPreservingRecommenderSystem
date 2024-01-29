@@ -290,8 +290,7 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
   std::vector<uint64_t> twoToTheAlphaPlusBetaEncodingVector(sealSlotCount,
                                                             0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
-    twoToTheAlphaPlusBetaEncodingVector[i] =
-        static_cast<uint>(pow(2, alpha + beta));
+    twoToTheAlphaPlusBetaEncodingVector[i] = (alpha + beta) << 2;
   }
   sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
                           twoToTheAlphaPlusBeta);
@@ -305,4 +304,15 @@ void RecSys::setM(const std::vector<std::pair<int, int>> providedM) {
 /// Set the encrypted ratings vector
 void RecSys::setRatings(const std::vector<seal::Ciphertext> providedRatings) {
   r = providedRatings;
+}
+
+/// Set the embedding vectors
+void RecSys::setEmbeddings(const std::vector<seal::Ciphertext> providedU,
+                           const std::vector<seal::Ciphertext> providedV,
+                           const std::vector<seal::Ciphertext> providedUHat,
+                           const std::vector<seal::Ciphertext> providedVHat) {
+  U = providedU;
+  V = providedV;
+  UHat = providedUHat;
+  VHat = providedVHat;
 }

@@ -1,7 +1,9 @@
+#include <seal/ciphertext.h>
 #include <seal/context.h>
 #include <seal/encryptionparams.h>
 #include <seal/keygenerator.h>
 #include <seal/modulus.h>
+#include <seal/plaintext.h>
 #include <seal/publickey.h>
 #include <seal/secretkey.h>
 #include <cstddef>
@@ -107,6 +109,56 @@ int main() {
   recSysInstance->setM(curM);
   recSysInstance->setRatings(encryptedRatings);
 
+  // Encode random values for U, V, UHat, VHat
+  // Need to move this to main and insert it
+  std::vector<seal::Ciphertext> U(curM.size()), V(curM.size()),
+      UHat(curM.size()), VHat(curM.size());
+  int prevUser = -1;
+  int prevItem = -1;
+  for (int i = 0; i < curM.size(); i++) {
+    std::vector<uint64_t> UEncodingVector(batchEncoder.slot_count(), 0ULL),
+        VEncodingVector(batchEncoder.slot_count(), 0ULL);
+    for (int j = 0; j < batchEncoder.slot_count(); j++) {
+      UEncodingVector[j] = rand() % 5;
+      VEncodingVector[j] = rand() % 5;
+    }
+    seal::Plaintext UPlain, VPlain;
+    batchEncoder.encode(UEncodingVector, UPlain);
+    batchEncoder.encode(VEncodingVector, VPlain);
+    encryptor.encrypt(UPlain, U[i]);
+    encryptor.encrypt(VPlain, V[i]);
+
+    // Add entry for UHat
+    if (curM.at(i).first == prevUser) {
+      std::vector<uint64_t> zeroEncodingVector(batchEncoder.slot_count(), 0ULL);
+      seal::Plaintext zeroPlain;
+      seal::Ciphertext zeroEnc;
+
+      batchEncoder.encode(zeroEncodingVector, zeroPlain);
+      encryptor.encrypt(zeroPlain, zeroEnc);
+      UHat.push_back(zeroEnc);
+    } else {
+      UHat.push_back(U.at(i));
+    }
+
+    // Add entry for UHat
+    if (curM.at(i).second == prevItem) {
+      std::vector<uint64_t> zeroEncodingVector(batchEncoder.slot_count(), 0ULL);
+      seal::Plaintext zeroPlain;
+      seal::Ciphertext zeroEnc;
+
+      batchEncoder.encode(zeroEncodingVector, zeroPlain);
+      encryptor.encrypt(zeroPlain, zeroEnc);
+      VHat.push_back(zeroEnc);
+    } else {
+      VHat.push_back(V.at(i));
+    }
+
+    // Re-assign prevUser and prevItem
+    std::tie(prevUser, prevItem) = curM.at(i);
+  }
+
+  recSysInstance->setEmbeddings(U, V, UHat, VHat);
   recSysInstance->gradientDescent();
 
   return 0;

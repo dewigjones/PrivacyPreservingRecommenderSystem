@@ -73,4 +73,8 @@ class RecSys {
 
   void setM(const std::vector<std::pair<int, int>> providedM);
   void setRatings(const std::vector<seal::Ciphertext> providedRatings);
+  void setEmbeddings(const std::vector<seal::Ciphertext> providedU,
+                     const std::vector<seal::Ciphertext> providedV,
+                     const std::vector<seal::Ciphertext> providedUHat,
+                     const std::vector<seal::Ciphertext> providedVHat);
 };
