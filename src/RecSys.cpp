@@ -12,7 +12,7 @@
 std::vector<uint64_t> RecSys::generateMaskFHE() {
   std::vector<uint64_t> maskVector(sealSlotCount, 0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
-    maskVector[i] = distr(gen);
+    maskVector[i] = distr(gen) % 2 ^ 60;
   }
   return maskVector;
 }
@@ -255,13 +255,16 @@ bool RecSys::stoppingCriterionCheck(
 /// RecSys Constructor
 RecSys::RecSys(std::shared_ptr<CSP> csp,
                std::shared_ptr<MessageHandler> messagehandler,
-               const seal::SEALContext& sealcontext)
+               const seal::SEALContext& sealcontext,
+               std::vector<std::pair<int, int>> providedM)
     : MessageHandlerInstance(messagehandler),
       CSPInstance(csp),
       gen(rd()),
       sealContext(sealcontext),
       sealEvaluator(sealcontext),
-      sealBatchEncoder(sealcontext) {
+      sealBatchEncoder(sealcontext),
+      M(providedM),
+      f(providedM.size()) {
   // Save slot count
   sealSlotCount = sealBatchEncoder.slot_count();
 

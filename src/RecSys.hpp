@@ -64,7 +64,8 @@ class RecSys {
  public:
   RecSys(std::shared_ptr<CSP> csp,
          std::shared_ptr<MessageHandler> messagehandler,
-         const seal::SEALContext& sealcontext);
+         const seal::SEALContext& sealcontext,
+         std::vector<std::pair<int, int>> providedM);
 
   bool uploadRating(EncryptedRatingAHE rating);
   int getPredictedRating(int userID, int itemID);

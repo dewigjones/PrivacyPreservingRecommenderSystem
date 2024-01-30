@@ -103,12 +103,6 @@ int main() {
     encryptedRatings.push_back(ratingEnc);
   }
 
-  // Inject data into RecSys
-  std::unique_ptr<RecSys> recSysInstance =
-      std::make_unique<RecSys>(CSPInstance, messageHandlerInstance, context);
-  recSysInstance->setM(curM);
-  recSysInstance->setRatings(encryptedRatings);
-
   // Encode random values for U, V, UHat, VHat
   // Need to move this to main and insert it
   std::vector<seal::Ciphertext> U(curM.size()), V(curM.size()),
@@ -158,6 +152,10 @@ int main() {
     std::tie(prevUser, prevItem) = curM.at(i);
   }
 
+  // Inject data into RecSys
+  std::unique_ptr<RecSys> recSysInstance = std::make_unique<RecSys>(
+      CSPInstance, messageHandlerInstance, context, curM);
+  recSysInstance->setRatings(encryptedRatings);
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
   recSysInstance->gradientDescent();
 
