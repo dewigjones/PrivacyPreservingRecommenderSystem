@@ -299,6 +299,7 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
 /// @brief Set the space of ratings
 void RecSys::setM(const std::vector<std::pair<int, int>> providedM) {
   M = providedM;
+  RecSys::f.reserve(M.size());
 }
 
 /// Set the encrypted ratings vector
