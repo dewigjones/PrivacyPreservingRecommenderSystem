@@ -6,6 +6,7 @@
 #include <seal/seal.h>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "MessageHandler.hpp"
 #include "Ratings.hpp"
@@ -75,14 +76,16 @@ class CSP {
   CSP(std::shared_ptr<MessageHandler> messagehandler,
       seal::SEALContext& sealcontext,
       seal::PublicKey const& sealhpk,
-      seal::SecretKey const& sealprivatekey)
+      seal::SecretKey const& sealprivatekey,
+      std::vector<std::pair<int, int>> providedM)
       : messageHandlerInstance(messagehandler),
         sealContext(sealcontext),
         sealHpk(sealhpk),
         sealPrivateKey(sealprivatekey),
         sealEncryptor(sealcontext, sealhpk),
         sealDecryptor(sealcontext, sealprivatekey),
-        sealBatchEncoder(sealcontext) {
+        sealBatchEncoder(sealcontext),
+        M(providedM) {
     sealSlotCount = sealBatchEncoder.slot_count();
     twoPowerAlpha = (int)pow(2, alpha);
     twoPowerBeta = (int)pow(2, beta);

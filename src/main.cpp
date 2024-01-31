@@ -42,9 +42,6 @@ int main() {
   //     parms.save(messageHandlerInstance->parms_stream);
   std::cout << "Hello World, public key size is " << public_key.data().size()
             << std::endl;
-  auto CSPInstance = std::make_shared<CSP>(messageHandlerInstance, context,
-                                           public_key, secret_key);
-  std::cout << CSPInstance->generateKeys() << std::endl;
 
   // Read test data
   // Declare vectors to hold input
@@ -151,7 +148,10 @@ int main() {
     // Re-assign prevUser and prevItem
     std::tie(prevUser, prevItem) = curM.at(i);
   }
-
+  // Inject data into new CSP
+  auto CSPInstance = std::make_shared<CSP>(messageHandlerInstance, context,
+                                           public_key, secret_key, curM);
+  std::cout << CSPInstance->generateKeys() << std::endl;
   // Inject data into RecSys
   std::unique_ptr<RecSys> recSysInstance = std::make_unique<RecSys>(
       CSPInstance, messageHandlerInstance, context, curM);
