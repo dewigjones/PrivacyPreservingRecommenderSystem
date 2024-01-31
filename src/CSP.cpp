@@ -32,11 +32,11 @@ EncryptedRating CSP::convertRatingAHEtoFHE(EncryptedRatingAHE rating) {
 /// @return R''
 std::vector<seal::Ciphertext> CSP::sumF(const std::vector<seal::Ciphertext> f) {
   // Declare result
-  std::vector<uint64_t> rprime;
+  std::vector<uint64_t> rprime(sealSlotCount);
 
   // Decrypt f and sum
-  std::vector<seal::Plaintext> f_dec;
-  std::vector<std::vector<uint64_t>> f_decode;
+  std::vector<seal::Plaintext> f_dec(CSP::M.size());
+  std::vector<std::vector<uint64_t>> f_decode(CSP::M.size());
   for (int i = 0; i < CSP::M.size(); i++) {
     // Decrypt and decode
     sealDecryptor.decrypt(f[i], f_dec[i]);
@@ -53,16 +53,16 @@ std::vector<seal::Ciphertext> CSP::sumF(const std::vector<seal::Ciphertext> f) {
   }
 
   // Encode, encrypt and return rprime
-  std::vector<std::vector<uint64_t>> rprimeEncodingVector;
-  std::vector<seal::Plaintext> rprimeEncode;
-  std::vector<seal::Ciphertext> rprimeEncrypt;
+  std::vector<seal::Ciphertext> rprimeEncrypt(M.size());
   // Encode
   for (int i = 0; i < CSP::M.size(); i++) {
+    std::vector<uint64_t> rprimeEncodingVector(sealSlotCount);
+    seal::Plaintext rprimeEncode;
     for (int j = 0; j < sealSlotCount; j++) {
-      rprimeEncodingVector[i][j] = rprime[i];
+      rprimeEncodingVector[j] = rprime[i];
     }
-    sealBatchEncoder.encode(rprimeEncodingVector[i], rprimeEncode[i]);
-    sealEncryptor.encrypt(rprimeEncode[i], rprimeEncrypt[i]);
+    sealBatchEncoder.encode(rprimeEncodingVector, rprimeEncode);
+    sealEncryptor.encrypt(rprimeEncode, rprimeEncrypt[i]);
   }
   return rprimeEncrypt;
 }
