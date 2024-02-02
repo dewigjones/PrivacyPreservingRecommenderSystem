@@ -102,8 +102,7 @@ int main() {
 
   // Encode random values for U, V, UHat, VHat
   // Need to move this to main and insert it
-  std::vector<seal::Ciphertext> U(curM.size()), V(curM.size()),
-      UHat(curM.size()), VHat(curM.size());
+  std::vector<seal::Ciphertext> U(curM.size()), V(curM.size()), UHat, VHat;
   int prevUser = -1;
   int prevItem = -1;
   for (int i = 0; i < curM.size(); i++) {
