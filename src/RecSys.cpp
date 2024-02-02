@@ -3,6 +3,7 @@
 #include <seal/plaintext.h>
 #include <sys/types.h>
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include "MessageHandler.hpp"
@@ -82,8 +83,9 @@ bool RecSys::gradientDescent() {
     }
 
     // Steps 6-7 - Calculate U Gradient , V Gradient, U', V' and add Masks
-    std::vector<seal::Ciphertext> UGradientPrime, VGradientPrime, UPrime,
-        VPrime;
+    std::vector<seal::Ciphertext> UGradientPrime(RecSys::M.size()),
+        VGradientPrime(RecSys::M.size()), UPrime(RecSys::M.size()),
+        VPrime(RecSys::M.size());
     for (int i = 0; i < RecSys::M.size(); i++) {
       // UGradient'[i] = v[i] * R[i][j] + twoToTheAlpha * lambda * UHat[i][j]
       seal::Ciphertext UHatLambdaMul, VHatLambdaMul;
@@ -264,7 +266,8 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
       sealEvaluator(sealcontext),
       sealBatchEncoder(sealcontext),
       M(providedM),
-      f(providedM.size()) {
+      f(providedM.size()),
+      R(providedM.size()) {
   // Save slot count
   sealSlotCount = sealBatchEncoder.slot_count();
 
