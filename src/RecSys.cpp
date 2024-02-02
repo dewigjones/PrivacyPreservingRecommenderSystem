@@ -115,11 +115,14 @@ bool RecSys::gradientDescent() {
       sealEvaluator.sub_inplace(VPrime[i], gammaVGradient);
     }
     // Step 7 - Generate and add masks
-    std::vector<std::vector<uint64_t>> UGradientPrimeMaskEncodingVector,
-        VGradientPrimeMaskEncodingVector, UPrimeMaskEncodingVector,
-        VPrimeMaskEncodingVector;
-    std::vector<seal::Plaintext> UGradientPrimeMask, VGradientPrimeMask,
-        UPrimeMask, VPrimeMask;
+    std::vector<std::vector<uint64_t>> UGradientPrimeMaskEncodingVector(
+        RecSys::M.size()),
+        VGradientPrimeMaskEncodingVector(RecSys::M.size()),
+        UPrimeMaskEncodingVector(RecSys::M.size()),
+        VPrimeMaskEncodingVector(RecSys::M.size());
+    std::vector<seal::Plaintext> UGradientPrimeMask(RecSys::M.size()),
+        VGradientPrimeMask(RecSys::M.size()), UPrimeMask(RecSys::M.size()),
+        VPrimeMask(RecSys::M.size());
     std::vector<uint64_t> UMaskSum(sealSlotCount, 0ULL),
         VMaskSum(sealSlotCount, 0ULL), UGradientMaskSum(sealSlotCount, 0ULL),
         VGradientMaskSum(sealSlotCount, 0ULL);
