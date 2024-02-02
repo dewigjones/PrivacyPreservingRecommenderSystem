@@ -1,6 +1,7 @@
 #include "CSP.hpp"
 #include <seal/plaintext.h>
 #include <cstdint>
+#include <ostream>
 #include <vector>
 
 int CSP::generateKeys() {
@@ -89,12 +90,12 @@ std::vector<std::vector<uint64_t>> CSP::aggregateUser(
       }
       prevUser = curUser;
     }
-
     // Add current entry to the running total for the current user
     for (int j = 0; j < sealSlotCount; j++) {
-      curResult[j] += A[i][j];
+      curResult[j] += A.at(i).at(j);
     }
   }
+  result.push_back(curResult);
   return result;
 }
 
@@ -126,6 +127,7 @@ std::vector<std::vector<uint64_t>> CSP::aggregateItem(
       curResult[j] += A[i][j];
     }
   }
+  result.push_back(curResult);
   return result;
 }
 
@@ -143,6 +145,7 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteUser(
     // If new user, increase index
     if (i != prevUser) {
       aIndex++;
+      prevUser = i;
     }
     // Push A[i] to the result
     result.push_back(A.at(aIndex));
@@ -164,6 +167,7 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
     // If new user, increase index
     if (j != prevItem) {
       aIndex++;
+      prevItem = i;
     }
     // Push A[i] to the result
     result.push_back(A.at(aIndex));
@@ -179,8 +183,8 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   std::vector<seal::Ciphertext> newUHat;
 
   // Decrypt and decode maskedUPrime
-  std::vector<seal::Plaintext> maskedUPrimePlaintext;
-  std::vector<std::vector<uint64_t>> maskedUPrimeDecoded;
+  std::vector<seal::Plaintext> maskedUPrimePlaintext(maskedUPrime.size());
+  std::vector<std::vector<uint64_t>> maskedUPrimeDecoded(maskedUPrime.size());
   for (int i = 0; i < maskedUPrime.size(); i++) {
     sealDecryptor.decrypt(maskedUPrime[i], maskedUPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedUPrimePlaintext[i], maskedUPrimeDecoded[i]);
@@ -194,7 +198,7 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   // Calculate new U
   std::vector<std::vector<uint64_t>> newUDecoded =
       reconstituteUser(aggregateUser(maskedUPrimeDecoded));
-  std::vector<seal::Plaintext> newUPlaintext;
+  std::vector<seal::Plaintext> newUPlaintext(newUDecoded.size());
   for (int i = 0; i < newUDecoded.size(); i++) {
     sealBatchEncoder.encode(newUDecoded[i], newUPlaintext[i]);
     sealEncryptor.encrypt(newUPlaintext[i], newU[i]);
