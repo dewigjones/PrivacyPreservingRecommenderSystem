@@ -180,7 +180,7 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
 std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
 CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   std::vector<seal::Ciphertext> newU(CSP::M.size());
-  std::vector<seal::Ciphertext> newUHat(CSP::M.size());
+  std::vector<seal::Ciphertext> newUHat;
 
   // Decrypt and decode maskedUPrime
   std::vector<seal::Plaintext> maskedUPrimePlaintext(maskedUPrime.size());
@@ -188,11 +188,9 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   for (int i = 0; i < maskedUPrime.size(); i++) {
     sealDecryptor.decrypt(maskedUPrime[i], maskedUPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedUPrimePlaintext[i], maskedUPrimeDecoded[i]);
-    // Scale[object Object][object Object]
+    // Scale
     for (int j = 0; j < sealSlotCount; j++) {
-      maskedUPrimeDecoded[i][j] =
-          std::min((uint64_t)maskedUPrimeDecoded[i][j] >> alpha,
-                   (uint64_t)(1UL << 59) - 1);
+      maskedUPrimeDecoded[i][j] = (uint64_t)maskedUPrimeDecoded[i][j] >> alpha;
     }
   }
 
@@ -232,7 +230,7 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
 /// @return Pair containing new V and VHat in that order
 std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
 CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
-  std::vector<seal::Ciphertext> newV;
+  std::vector<seal::Ciphertext> newV(CSP::M.size());
   std::vector<seal::Ciphertext> newVHat;
 
   // Decrypt and decode maskedVPrime
@@ -251,7 +249,7 @@ CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
   // Calculate new V
   std::vector<std::vector<uint64_t>> newVDecoded =
       reconstituteItem(aggregateItem(maskedVPrimeDecoded));
-  std::vector<seal::Plaintext> newVPlaintext;
+  std::vector<seal::Plaintext> newVPlaintext(newVDecoded.size());
   for (int i = 0; i < newVDecoded.size(); i++) {
     sealBatchEncoder.encode(newVDecoded[i], newVPlaintext[i]);
     sealEncryptor.encrypt(newVPlaintext[i], newV[i]);
@@ -284,7 +282,8 @@ CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
 std::vector<seal::Ciphertext> CSP::calculateNewUGradient(
     std::vector<seal::Ciphertext> maskedUGradientPrime) {
   // Decrypt and decode input
-  std::vector<std::vector<uint64_t>> maskedUGradientDecoded;
+  std::vector<std::vector<uint64_t>> maskedUGradientDecoded(
+      maskedUGradientPrime.size());
   for (int i = 0; i < maskedUGradientPrime.size(); i++) {
     seal::Plaintext maskedUGradientDecrypt;
     sealDecryptor.decrypt(maskedUGradientPrime[i], maskedUGradientDecrypt);
@@ -301,7 +300,7 @@ std::vector<seal::Ciphertext> CSP::calculateNewUGradient(
       aggregateUser(maskedUGradientDecoded);
 
   // Re-encode and re-encrypt
-  std::vector<seal::Ciphertext> newUGradient;
+  std::vector<seal::Ciphertext> newUGradient(newUGradientDecoded.size());
   for (int i = 0; i < newUGradientDecoded.size(); i++) {
     seal::Plaintext newUGradientPlaintext;
     sealBatchEncoder.encode(newUGradientDecoded[i], newUGradientPlaintext);
@@ -315,7 +314,8 @@ std::vector<seal::Ciphertext> CSP::calculateNewUGradient(
 std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
     std::vector<seal::Ciphertext> maskedVGradientPrime) {
   // Decrypt and decode input
-  std::vector<std::vector<uint64_t>> maskedVGradientDecoded;
+  std::vector<std::vector<uint64_t>> maskedVGradientDecoded(
+      maskedVGradientPrime.size());
   for (int i = 0; i < maskedVGradientPrime.size(); i++) {
     seal::Plaintext maskedVGradientDecrypt;
     sealDecryptor.decrypt(maskedVGradientPrime[i], maskedVGradientDecrypt);
@@ -332,7 +332,7 @@ std::vector<seal::Ciphertext> CSP::calculateNewVGradient(
       aggregateItem(maskedVGradientDecoded);
 
   // Re-encode and re-encrypt
-  std::vector<seal::Ciphertext> newVGradient;
+  std::vector<seal::Ciphertext> newVGradient(newVGradientDecoded.size());
   for (int i = 0; i < newVGradientDecoded.size(); i++) {
     seal::Plaintext newVGradientPlaintext;
     sealBatchEncoder.encode(newVGradientDecoded[i], newVGradientPlaintext);
