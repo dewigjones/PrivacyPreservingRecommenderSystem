@@ -109,8 +109,8 @@ std::vector<std::vector<uint64_t>> CSP::aggregateItem(
   int prevItem = -1;
 
   for (int i = 0; i < A.size(); i++) {
-    // Get corresponding user at index of M
-    int curItem = M.at(i).first;
+    // Get corresponding item at index of M
+    int curItem = M.at(i).second;
 
     // If current item is not the same as the last, push result and move onto
     // the next item
@@ -179,8 +179,8 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
 /// @return Pair containing new U and UHat in that order
 std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
 CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
-  std::vector<seal::Ciphertext> newU;
-  std::vector<seal::Ciphertext> newUHat;
+  std::vector<seal::Ciphertext> newU(CSP::M.size());
+  std::vector<seal::Ciphertext> newUHat(CSP::M.size());
 
   // Decrypt and decode maskedUPrime
   std::vector<seal::Plaintext> maskedUPrimePlaintext(maskedUPrime.size());
@@ -188,10 +188,11 @@ CSP::calculateNewUandUHat(std::vector<seal::Ciphertext> maskedUPrime) {
   for (int i = 0; i < maskedUPrime.size(); i++) {
     sealDecryptor.decrypt(maskedUPrime[i], maskedUPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedUPrimePlaintext[i], maskedUPrimeDecoded[i]);
-    // Scale
+    // Scale[object Object][object Object]
     for (int j = 0; j < sealSlotCount; j++) {
       maskedUPrimeDecoded[i][j] =
-          (uint64_t)std::floor(maskedUPrimeDecoded[i][j] / twoPowerAlpha);
+          std::min((uint64_t)maskedUPrimeDecoded[i][j] >> alpha,
+                   (uint64_t)(1UL << 59) - 1);
     }
   }
 
@@ -235,15 +236,15 @@ CSP::calculateNewVandVHat(std::vector<seal::Ciphertext> maskedVPrime) {
   std::vector<seal::Ciphertext> newVHat;
 
   // Decrypt and decode maskedVPrime
-  std::vector<seal::Plaintext> maskedVPrimePlaintext;
-  std::vector<std::vector<uint64_t>> maskedVPrimeDecoded;
+  std::vector<seal::Plaintext> maskedVPrimePlaintext(CSP::M.size());
+  std::vector<std::vector<uint64_t>> maskedVPrimeDecoded(CSP::M.size());
   for (int i = 0; i < maskedVPrime.size(); i++) {
     sealDecryptor.decrypt(maskedVPrime[i], maskedVPrimePlaintext[i]);
     sealBatchEncoder.decode(maskedVPrimePlaintext[i], maskedVPrimeDecoded[i]);
     // Scale
     for (int j = 0; j < sealSlotCount; j++) {
       maskedVPrimeDecoded[i][j] =
-          (uint64_t)std::floor(maskedVPrimeDecoded[i][j] / twoPowerAlpha);
+          (uint64_t)std::floor(maskedVPrimeDecoded[i][j] >> alpha);
     }
   }
 
