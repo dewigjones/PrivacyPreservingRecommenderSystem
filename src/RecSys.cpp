@@ -179,6 +179,8 @@ bool RecSys::gradientDescent() {
       sealEvaluator.sub_plain(VPrimePrime[i], VMaskSumPlain, V[i]);
       sealEvaluator.sub_plain(VHatPrimePrime[i], VMaskSumPlain, VHat[i]);
     }
+    UGradient.resize(UGradientPrimePrime.size());
+    VGradient.resize(VGradientPrimePrime.size());
     for (int i = 0; i < UGradientPrimePrime.size(); i++) {
       sealEvaluator.sub_plain(UGradientPrimePrime[i], UGradientMaskSumPlain,
                               UGradient[i]);
@@ -197,9 +199,11 @@ bool RecSys::gradientDescent() {
 bool RecSys::stoppingCriterionCheck(
     const std::vector<seal::Ciphertext>& UGradientParam,
     const std::vector<seal::Ciphertext>& VGradientParam) {
-  std::vector<seal::Ciphertext> UGradientSquare, VGradientSquare;
-  std::vector<std::vector<uint64_t>> UGradientSquareMaskVector,
-      VGradientSquareMaskVector;
+  std::vector<seal::Ciphertext> UGradientSquare(UGradientParam.size()),
+      VGradientSquare(VGradientParam.size());
+  std::vector<std::vector<uint64_t>> UGradientSquareMaskVector(
+      UGradientParam.size()),
+      VGradientSquareMaskVector(VGradientParam.size());
   // Square UGradient and mask
   for (int i = 0; i < UGradientParam.size(); i++) {
     sealEvaluator.square(UGradientParam[i], UGradientSquare[i]);
@@ -229,7 +233,7 @@ bool RecSys::stoppingCriterionCheck(
 
   // Sum mask vectors
   std::vector<uint64_t> UMaskSum(sealSlotCount, 0ULL),
-      VMaskSum(sealSlotCount, 0ULL), Su, Sv;
+      VMaskSum(sealSlotCount, 0ULL), Su(sealSlotCount), Sv(sealSlotCount);
 
   for (int i = 0; i < UGradientSquareMaskVector.size(); i++) {
     for (int j = 0; j < sealSlotCount; j++) {
@@ -270,7 +274,9 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
       sealBatchEncoder(sealcontext),
       M(providedM),
       f(providedM.size()),
-      R(providedM.size()) {
+      R(providedM.size()),
+      UGradient(providedM.size()),
+      VGradient(providedM.size()) {
   // Save slot count
   sealSlotCount = sealBatchEncoder.slot_count();
 
