@@ -43,8 +43,8 @@ class RecSys {
   int beta = 20;       // Number of fractional bits for real numbers
   int gamma = 10;      // Number of bits for gradient descent computation
   int lambda = 1;      // Learning rate
-  int threshold = 10;  // Threshold for stopping criterion
-  int maxEpochs = 5;   // Maximum number of iterations for gradient descent -
+  int threshold = 1;   // Threshold for stopping criterion
+  int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
                        // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent

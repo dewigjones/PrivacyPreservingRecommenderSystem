@@ -47,7 +47,7 @@ int main() {
   // Declare vectors to hold input
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 10;
+  int maxLines = 100;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {

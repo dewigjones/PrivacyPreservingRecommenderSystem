@@ -63,17 +63,17 @@ bool RecSys::gradientDescent() {
 
     // Steps 5-7 (Component-Wise Multiplication and Addition)
     // Step 5 - Remove mask by summing it and then subtracting
-    std::vector<std::vector<uint64_t>> epsilonMaskSum(RecSys::M.size(),
-                                                      std::vector<uint64_t>());
+    std::vector<std::vector<uint64_t>> epsilonMaskSum(
+        RecSys::M.size(), std::vector<uint64_t>(sealSlotCount));
     for (int i = 0; i < RecSys::M.size(); i++) {
       // Calculate sum for i entry
       uint64_t jSum = 0;
-      for (int j = 0; j < d; j++) {
+      for (int j = 0; j < sealSlotCount; j++) {
         jSum += epsilonMask[i][j];
       }
       // Set all of i and j entry to sum
-      for (int j = 0; j < d; j++) {
-        epsilonMaskSum[i][j] = jSum * static_cast<uint64_t>(pow(2, alpha));
+      for (int j = 0; j < sealSlotCount; j++) {
+        epsilonMaskSum[i][j] = jSum << alpha;
       }
       // Encode and subtract sum of mask
       seal::Plaintext epsilonMaskSumPlaintext;
