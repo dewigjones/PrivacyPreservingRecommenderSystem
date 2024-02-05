@@ -105,28 +105,28 @@ std::vector<std::vector<uint64_t>> CSP::aggregateUser(
 /// @param A - decoded plaintext vector
 std::vector<std::vector<uint64_t>> CSP::aggregateItem(
     const std::vector<std::vector<uint64_t>> A) {
-  std::vector<std::vector<uint64_t>> result(A.size());
-  std::set<int> observedItems{};
+  std::vector<std::vector<uint64_t>> result;
+  std::map<int, int> indexMap{};
+  int maxIndex = -1;
 
+  // Map of indicies
+  // If not in index map, push back and increase index
   for (int i = 0; i < A.size(); i++) {
     // Get corresponding item at index of M
     int curItem = M.at(i).second;
 
     // If this item has already been seen (and thus initialised the result
     // vector at i) then add otherwise set
-    if (observedItems.find(curItem) != observedItems.end()) {
+    if (indexMap.find(curItem) != indexMap.end()) {
       for (int j = 0; j < sealSlotCount; j++) {
         result[curItem][j] += A[i][j];
       }
     } else {
-      for (int j = 0; j < sealSlotCount; j++) {
-        result[curItem] = std::vector<uint64_t>(sealSlotCount);
-        result[curItem][j] = A[i][j];
-      }
+      maxIndex++;
+      indexMap.insert(std::make_pair(curItem, maxIndex));
+      result.push_back(A[i]);
     }
-    observedItems.insert(curItem);
   }
-  result.resize(observedItems.size());
   return result;
 }
 
@@ -158,18 +158,17 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteUser(
 std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
     std::vector<std::vector<uint64_t>> A) {
   std::vector<std::vector<uint64_t>> result;
-  int prevItem = -1;
-  int aIndex = -1;
-
+  std::map<int, int> indexMap;
+  int maxIndex = -1;
   // Go through M
   for (auto [i, j] : CSP::M) {
-    // If new user, increase index
-    if (j != prevItem) {
-      aIndex++;
-      prevItem = i;
+    if (indexMap.find(j) != indexMap.end()) {
+      result.push_back(A.at(indexMap.find(j)->first));
+    } else {
+      maxIndex++;
+      indexMap.insert(std::make_pair(j, maxIndex));
+      result.push_back(A.at(maxIndex));
     }
-    // Push A[i] to the result
-    result.push_back(A.at(aIndex));
   }
   return result;
 }

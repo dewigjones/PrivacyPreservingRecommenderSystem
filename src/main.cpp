@@ -25,6 +25,7 @@
 
 int main() {
   // Set up seal
+  std::cout << "Initialising seal" << std::endl;
   seal::EncryptionParameters parms(seal::scheme_type::bgv);
   size_t poly_modulus_degree = 16384;
   parms.set_poly_modulus_degree(poly_modulus_degree);
@@ -40,17 +41,14 @@ int main() {
   seal::Encryptor encryptor(context, public_key);
   seal::BatchEncoder batchEncoder(context);
   std::shared_ptr<MessageHandler> messageHandlerInstance{};
-  // messageHandlerInstance->last_write_size =
-  //     parms.save(messageHandlerInstance->parms_stream);
-  std::cout << "Hello World, public key size is " << public_key.data().size()
-            << std::endl;
 
   // Read test data
   // Declare vectors to hold input
+  std::cout << "Reading data" << std::endl;
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 10;
+  int maxLines = 100;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -95,6 +93,7 @@ int main() {
   }
 
   // Encrypt ratings
+  std::cout << "Encrypting ratings" << std::endl;
   std::vector<seal::Ciphertext> encryptedRatings;
   for (int rating : ratings) {
     std::vector<uint64_t> ratingEncodingVector(batchEncoder.slot_count(), 0ULL);
@@ -110,6 +109,7 @@ int main() {
 
   // Encode random values for U, V, UHat, VHat
   // Need to move this to main and insert it
+  std::cout << "Creating embeddings" << std::endl;
   std::vector<seal::Ciphertext> U(curM.size()), V(curM.size()), UHat, VHat;
   int prevUser = -1;
   int prevItem = -1;
@@ -156,15 +156,17 @@ int main() {
     std::tie(prevUser, prevItem) = curM.at(i);
   }
   // Inject data into new CSP
+  std::cout << "Creating CSP Instance" << std::endl;
   auto CSPInstance = std::make_shared<CSP>(messageHandlerInstance, context,
                                            public_key, secret_key, curM);
-  std::cout << CSPInstance->generateKeys() << std::endl;
   // Inject data into RecSys
+  std::cout << "Creating RecSys Instance" << std::endl;
   std::unique_ptr<RecSys> recSysInstance = std::make_unique<RecSys>(
       CSPInstance, messageHandlerInstance, context, curM);
   recSysInstance->setRatings(encryptedRatings);
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
+  std::cout << "Running Gradient Descent" << std::endl;
   recSysInstance->gradientDescent();
-
+  std::cout << "Finished" std::endl;
   return 0;
 }
