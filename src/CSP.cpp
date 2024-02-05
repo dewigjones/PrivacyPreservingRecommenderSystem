@@ -2,6 +2,7 @@
 #include <seal/plaintext.h>
 #include <cstdint>
 #include <ostream>
+#include <set>
 #include <vector>
 
 int CSP::generateKeys() {
@@ -104,30 +105,28 @@ std::vector<std::vector<uint64_t>> CSP::aggregateUser(
 /// @param A - decoded plaintext vector
 std::vector<std::vector<uint64_t>> CSP::aggregateItem(
     const std::vector<std::vector<uint64_t>> A) {
-  std::vector<std::vector<uint64_t>> result;
-  std::vector<uint64_t> curResult = std::vector<uint64_t>(sealSlotCount, 0ULL);
-  int prevItem = -1;
+  std::vector<std::vector<uint64_t>> result(A.size());
+  std::set<int> observedItems{};
 
   for (int i = 0; i < A.size(); i++) {
     // Get corresponding item at index of M
     int curItem = M.at(i).second;
 
-    // If current item is not the same as the last, push result and move onto
-    // the next item
-    if (curItem != prevItem) {
-      if (prevItem != -1) {
-        result.push_back(curResult);
-        std::fill(curResult.begin(), curResult.end(), 0);
+    // If this item has already been seen (and thus initialised the result
+    // vector at i) then add otherwise set
+    if (observedItems.find(curItem) != observedItems.end()) {
+      for (int j = 0; j < sealSlotCount; j++) {
+        result[curItem][j] += A[i][j];
       }
-      prevItem = curItem;
+    } else {
+      for (int j = 0; j < sealSlotCount; j++) {
+        result[curItem] = std::vector<uint64_t>(sealSlotCount);
+        result[curItem][j] = A[i][j];
+      }
     }
-
-    // Add current entry to the running total for the current item
-    for (int j = 0; j < sealSlotCount; j++) {
-      curResult[j] += A[i][j];
-    }
+    observedItems.insert(curItem);
   }
-  result.push_back(curResult);
+  result.resize(observedItems.size());
   return result;
 }
 
