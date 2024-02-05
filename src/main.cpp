@@ -13,8 +13,10 @@
 #include <iostream>
 #include <memory>
 #include <ostream>
+#include <set>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 #include "CSP.hpp"
 #include "MessageHandler.hpp"
@@ -45,9 +47,10 @@ int main() {
 
   // Read test data
   // Declare vectors to hold input
+  std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 100;
+  int maxLines = 10;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -78,12 +81,17 @@ int main() {
       }
 
       // Push current line to our vectors
-      curM.push_back(std::make_pair(user, movie));
-      ratings.push_back(rating);
+      data.insert(std::make_tuple(user, movie, rating));
     }
     fileReader.close();
   } else {
     std::cout << "Could not open file" << std::endl;
+  }
+
+  // Populate M and rating vectors
+  for (auto [user, movie, rating] : data) {
+    curM.push_back(std::make_pair(user, movie));
+    ratings.push_back(rating);
   }
 
   // Encrypt ratings
