@@ -167,6 +167,6 @@ int main() {
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
   std::cout << "Running Gradient Descent" << std::endl;
   recSysInstance->gradientDescent();
-  std::cout << "Finished" std::endl;
+  std::cout << "Finished" << std::endl;
   return 0;
 }
