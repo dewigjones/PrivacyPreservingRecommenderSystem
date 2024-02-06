@@ -71,7 +71,7 @@ class RecSys {
   int getPredictedRating(int userID, int itemID);
   std::vector<EncryptedRating> getPredictiedRatings(int userID);
   bool gradientDescent();
-
+  std::vector<seal::Ciphertext> computePredictions(int user);
   void setM(const std::vector<std::pair<int, int>> providedM);
   void setRatings(const std::vector<seal::Ciphertext> providedRatings);
   void setEmbeddings(const std::vector<seal::Ciphertext> providedU,

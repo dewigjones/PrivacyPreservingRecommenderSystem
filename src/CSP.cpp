@@ -1,4 +1,5 @@
 #include "CSP.hpp"
+#include <seal/ciphertext.h>
 #include <seal/plaintext.h>
 #include <cstdint>
 #include <ostream>
@@ -388,4 +389,63 @@ std::pair<bool, bool> CSP::calculateStoppingVector(
   }
 
   return {UThresholdMet, VThresholdMet};
+}
+
+///@brief Return a pair of j-length masked vectors, the requested user vector j
+/// times and all the movie vectos respectively - Computing Predictions
+std::pair<std::vector<seal::Ciphertext>, std::vector<seal::Ciphertext>>
+CSP::calculateUiandVVectors(int requestedUser,
+                            std::vector<seal::Ciphertext> maskedUHat,
+                            std::vector<seal::Ciphertext> maskedVHat) {
+  std::vector<std::vector<uint64_t>> maskedUHatDecoded(maskedUHat.size()),
+      maskedVHatDecoded(maskedVHat.size());
+  std::vector<seal::Ciphertext> uResult, vResult(maskedVHat.size());
+
+  // Decrypt vectors
+  for (int i = 0; i < maskedUHat.size(); i++) {
+    seal::Plaintext UHatPlain;
+    sealDecryptor.decrypt(maskedUHat.at(i), UHatPlain);
+    sealBatchEncoder.decode(UHatPlain, maskedUHatDecoded[i]);
+  }
+
+  for (int i = 0; i < maskedVHat.size(); i++) {
+    seal::Plaintext VHatPlain;
+    sealDecryptor.decrypt(maskedVHat.at(i), VHatPlain);
+    sealBatchEncoder.decode(VHatPlain, maskedVHatDecoded[i]);
+  }
+
+  // Go through M
+  // if i == requestedUser found for first time, set the u ciphertext
+  seal::Ciphertext uVectorEnc;
+  for (int i = 0; i < CSP::M.size(); i++) {
+    if (M.at(i).first == requestedUser) {
+      std::vector<uint64_t> uVector = maskedUHatDecoded.at(i);
+      seal::Plaintext uVectorPlain;
+      sealBatchEncoder.encode(uVector, uVectorPlain);
+      sealEncryptor.encrypt(uVectorPlain, uVectorEnc);
+      break;
+    }
+  }
+
+  // Go through M
+  // keep track of found js in set and push back to vResult if first time
+  std::set<int> observedItems{};
+  int index = 0;
+  for (int i = 0; i < CSP::M.size(); i++) {
+    if (observedItems.find(M.at(i).second) == observedItems.end()) {
+      observedItems.insert(M.at(i).second);
+      seal::Plaintext plainRes;
+      sealBatchEncoder.encode(maskedVHatDecoded.at(i), plainRes);
+      sealEncryptor.encrypt(plainRes, vResult[index++]);
+    }
+  }
+  vResult.resize(index);
+
+  // Go through vResult and push back u ciphertext to uResult
+  for (int i = 0; i < CSP::M.size(); i++) {
+    uResult.push_back(uVectorEnc);
+  }
+
+  // return pair
+  return {uResult, vResult};
 }

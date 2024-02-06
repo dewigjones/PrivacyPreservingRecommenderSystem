@@ -311,6 +311,40 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
                           twoToTheAlphaPlusBeta);
 }
 
+///@brief get the encrypted predictions of all films for user i
+std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
+  // Mask and send UHat and VHat
+  std::vector<std::vector<uint64_t>> UHatMask(UHat.size()),
+      VHatMask(VHat.size());
+  std::vector<seal::Ciphertext> maskedUHat(UHat.size()),
+      maskedVHat(VHat.size());
+
+  for (int i = 0; i < UHat.size(); i++) {
+    UHatMask[i] = generateMaskFHE();
+
+    seal::Plaintext maskPlain;
+    sealBatchEncoder.encode(UHatMask[i], maskPlain);
+    sealEvaluator.add_plain(UHat[i], maskPlain, maskedUHat[i]);
+  }
+  for (int i = 0; i < VHat.size(); i++) {
+    VHatMask[i] = generateMaskFHE();
+
+    seal::Plaintext maskPlain;
+    sealBatchEncoder.encode(VHatMask[i], maskPlain);
+    sealEvaluator.add_plain(VHat[i], maskPlain, maskedVHat[i]);
+  }
+
+  // Get masked ui and v vectors from CSP
+
+  // Remove mask and multiply
+
+  // Get masked entry wise sum from CSP
+
+  // Remove entrywise sum of mask
+
+  // return result
+}
+
 /// @brief Set the space of ratings
 void RecSys::setM(const std::vector<std::pair<int, int>> providedM) {
   M = providedM;
