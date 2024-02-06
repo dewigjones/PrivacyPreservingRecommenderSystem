@@ -369,11 +369,33 @@ std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
                            dDimensionalMultiplication[i]);
   }
 
+  // Mask d-dimensional multiplication result
+  std::vector<std::vector<uint64_t>> dDimensionalMultiplicationMask(
+      dDimensionalMultiplication.size());
+  for (int i = 0; i < dDimensionalMultiplication.size(); i++) {
+    dDimensionalMultiplicationMask[i] = generateMaskFHE();
+    seal::Plaintext encodedMaskRow;
+    sealBatchEncoder.encode(dDimensionalMultiplicationMask[i], encodedMaskRow);
+    sealEvaluator.add_plain_inplace(dDimensionalMultiplication.at(i),
+                                    encodedMaskRow);
+  }
+
   // Get masked entry wise sum from CSP
+  std::vector<seal::Ciphertext> result =
+      CSPInstance->reducePredictionVector(dDimensionalMultiplication);
 
-  // Remove entrywise sum of mask
+  // Remove entry wise sum of mask
+  for (int i = 0; i < result.size(); i++) {
+    std::vector<uint64_t> curRowMaskSum(sealSlotCount, 0ULL);
+    for (int j = 0; j < sealSlotCount; j++) {
+      curRowMaskSum[0] += dDimensionalMultiplicationMask.at(i).at(j);
+    }
+    seal::Plaintext curRowMaskSumPlain;
+    sealBatchEncoder.encode(curRowMaskSum, curRowMaskSumPlain);
+    sealEvaluator.sub_plain_inplace(result.at(i), curRowMaskSumPlain);
+  }
 
-  // return result
+  return result;
 }
 
 /// @brief Set the space of ratings

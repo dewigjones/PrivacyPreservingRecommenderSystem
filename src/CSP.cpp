@@ -465,7 +465,7 @@ std::vector<seal::Ciphertext> CSP::reducePredictionVector(
     // Sum
     std::vector<uint64_t> rowSum(sealSlotCount, 0ULL);
     for (int j = 0; j < sealSlotCount; j++) {
-      sealSlotCount[0] += predictionVectorDecoded.at(i).at(j);
+      rowSum[0] += predictionVectorDecoded.at(i).at(j);
     }
 
     // Re-encode and re-encrypt
