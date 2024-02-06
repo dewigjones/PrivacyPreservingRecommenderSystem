@@ -78,6 +78,9 @@ class CSP {
       std::vector<uint64_t> Su,
       std::vector<uint64_t> Sv);
 
+  std::vector<seal::Ciphertext> reducePredictionVector(
+      std::vector<seal::Ciphertext> predictionVector);
+
   CSP(std::shared_ptr<MessageHandler> messagehandler,
       seal::SEALContext& sealcontext,
       seal::PublicKey const& sealhpk,

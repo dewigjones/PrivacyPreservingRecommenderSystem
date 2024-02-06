@@ -449,3 +449,29 @@ CSP::calculateUiandVVectors(int requestedUser,
   // return pair
   return {uResult, vResult};
 }
+
+/// @brief sum entrywise d dimension vector to reduce to masked prediction
+std::vector<seal::Ciphertext> CSP::reducePredictionVector(
+    std::vector<seal::Ciphertext> predictionVector) {
+  std::vector<std::vector<uint64_t>> predictionVectorDecoded(
+      predictionVector.size());
+  std::vector<seal::Ciphertext> result(predictionVector.size());
+  for (int i = 0; i < predictionVector.size(); i++) {
+    // Decrypt and decode
+    seal::Plaintext curRowPlain;
+    sealDecryptor.decrypt(predictionVector.at(i), curRowPlain);
+    sealBatchEncoder.decode(curRowPlain, predictionVectorDecoded[i]);
+
+    // Sum
+    std::vector<uint64_t> rowSum(sealSlotCount, 0ULL);
+    for (int j = 0; j < sealSlotCount; j++) {
+      sealSlotCount[0] += predictionVectorDecoded.at(i).at(j);
+    }
+
+    // Re-encode and re-encrypt
+    seal::Plaintext curRowSumPlain;
+    sealBatchEncoder.encode(rowSum, curRowSumPlain);
+    sealEncryptor.encrypt(curRowSumPlain, result[i]);
+  }
+  return result;
+}

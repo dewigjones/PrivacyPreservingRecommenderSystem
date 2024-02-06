@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <vector>
 #include "MessageHandler.hpp"
 
@@ -305,7 +306,7 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
   std::vector<uint64_t> twoToTheAlphaPlusBetaEncodingVector(sealSlotCount,
                                                             0ULL);
   for (int i = 0; i < sealSlotCount; i++) {
-    twoToTheAlphaPlusBetaEncodingVector[i] = (alpha + beta) << 2;
+    twoToTheAlphaPlusBetaEncodingVector[i] = 1 << (alpha + beta);
   }
   sealBatchEncoder.encode(twoToTheAlphaPlusBetaEncodingVector,
                           twoToTheAlphaPlusBeta);
@@ -335,8 +336,38 @@ std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
   }
 
   // Get masked ui and v vectors from CSP
+  auto [UVector, VVector] =
+      CSPInstance->calculateUiandVVectors(user, maskedUHat, maskedVHat);
 
   // Remove mask and multiply
+  seal::Plaintext uMaskEntryPlain;
+  for (int i = 0; i < RecSys::M.size(); i++) {
+    if (M.at(i).first == user) {
+      sealBatchEncoder.encode(UHatMask.at(i), uMaskEntryPlain);
+      break;
+    }
+  }
+  for (int i = 0; i < UVector.size(); i++) {
+    sealEvaluator.sub_plain_inplace(UVector.at(i), uMaskEntryPlain);
+  }
+  // Keep track of order that the items are found to remove correct mask
+  std::set<int> observedItems{};
+  int index = 0;
+  for (int i = 0; i < RecSys::M.size(); i++) {
+    if (observedItems.find(M.at(i).second) == observedItems.end()) {
+      observedItems.insert(M.at(i).second);
+      seal::Plaintext plainRes;
+      sealBatchEncoder.encode(VHatMask.at(i), plainRes);
+      sealEvaluator.sub_plain_inplace(VVector.at(index++), plainRes);
+    }
+  }
+
+  // Multiply the two resultant vectors
+  std::vector<seal::Ciphertext> dDimensionalMultiplication(UVector.size());
+  for (int i = 0; i < UVector.size(); i++) {
+    sealEvaluator.multiply(UVector.at(i), VVector.at(i),
+                           dDimensionalMultiplication[i]);
+  }
 
   // Get masked entry wise sum from CSP
 
