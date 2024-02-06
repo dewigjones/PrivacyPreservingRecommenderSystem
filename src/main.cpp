@@ -119,8 +119,8 @@ int main() {
     std::vector<uint64_t> UEncodingVector(batchEncoder.slot_count(), 0ULL),
         VEncodingVector(batchEncoder.slot_count(), 0ULL);
     for (int j = 0; j < batchEncoder.slot_count(); j++) {
-      UEncodingVector[j] = rand() % 5;
-      VEncodingVector[j] = rand() % 5;
+      UEncodingVector[j] = (uint64_t)rand() % 5;
+      VEncodingVector[j] = (uint64_t)rand() % 5;
     }
     seal::Plaintext UPlain, VPlain;
     batchEncoder.encode(UEncodingVector, UPlain);
@@ -167,6 +167,7 @@ int main() {
       CSPInstance, messageHandlerInstance, context, curM);
   recSysInstance->setRatings(encryptedRatings);
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
+
   std::cout << "Running Gradient Descent" << std::endl;
   recSysInstance->gradientDescent();
 
