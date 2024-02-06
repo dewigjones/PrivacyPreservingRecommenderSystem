@@ -1,5 +1,6 @@
 #include <seal/ciphertext.h>
 #include <seal/context.h>
+#include <seal/decryptor.h>
 #include <seal/encryptionparams.h>
 #include <seal/keygenerator.h>
 #include <seal/modulus.h>
@@ -40,6 +41,7 @@ int main() {
 
   seal::Encryptor encryptor(context, public_key);
   seal::BatchEncoder batchEncoder(context);
+  seal::Decryptor decryptor(context, secret_key);
   std::shared_ptr<MessageHandler> messageHandlerInstance{};
 
   // Read test data
@@ -167,6 +169,19 @@ int main() {
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
   std::cout << "Running Gradient Descent" << std::endl;
   recSysInstance->gradientDescent();
+
+  std::cout << "Computing results for user 1" << std::endl;
+  std::vector<seal::Ciphertext> resultsFor1 =
+      recSysInstance->computePredictions(1);
+
+  std::cout << "Decrypted results for user 1:" << std::endl;
+  for (int i = 0; i < resultsFor1.size(); i++) {
+    seal::Plaintext curRowPlain;
+    std::vector<uint64_t> curRow;
+    decryptor.decrypt(resultsFor1.at(i), curRowPlain);
+    batchEncoder.decode(curRowPlain, curRow);
+    std::cout << curRow.at(0) << std::endl;
+  }
   std::cout << "Finished" << std::endl;
   return 0;
 }
