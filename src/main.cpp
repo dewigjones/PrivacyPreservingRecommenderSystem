@@ -50,7 +50,7 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 100;
+  int maxLines = 300;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
