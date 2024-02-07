@@ -50,7 +50,8 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 300;
+  int maxLines = 50;
+  int skipLines = 95;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -58,6 +59,8 @@ int main() {
 
     // Get each line
     while (curLine++ < maxLines && std::getline(fileReader, line)) {
+      if (skipLines-- > 0)
+        continue;
       std::string column;       // Hold current column entry in line
       int columnIndex = 0;      // Count which column of line we're in
       int user, movie, rating;  // Variables for output
