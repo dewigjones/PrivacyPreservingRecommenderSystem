@@ -120,7 +120,7 @@ std::vector<std::vector<uint64_t>> CSP::aggregateItem(
     // vector at i) then add otherwise set
     if (indexMap.find(curItem) != indexMap.end()) {
       for (int j = 0; j < sealSlotCount; j++) {
-        result[curItem][j] += A[i][j];
+        result[indexMap.find(curItem)][j] += A[i][j];
       }
     } else {
       maxIndex++;

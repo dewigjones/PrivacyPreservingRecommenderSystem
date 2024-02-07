@@ -50,8 +50,8 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 50;
-  int skipLines = 95;
+  int maxLines = 150;
+  int skipLines = 0;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -59,32 +59,32 @@ int main() {
 
     // Get each line
     while (curLine++ < maxLines && std::getline(fileReader, line)) {
-      if (skipLines-- > 0)
-        continue;
-      std::string column;       // Hold current column entry in line
-      int columnIndex = 0;      // Count which column of line we're in
-      int user, movie, rating;  // Variables for output
+      if (skipLines-- < 0) {
+        std::string column;       // Hold current column entry in line
+        int columnIndex = 0;      // Count which column of line we're in
+        int user, movie, rating;  // Variables for output
 
-      // Create a stringstream for current line so we can use getline to split
-      // by delimiter
-      std::stringstream ss;
-      ss.str(line);
+        // Create a stringstream for current line so we can use getline to split
+        // by delimiter
+        std::stringstream ss;
+        ss.str(line);
 
-      // Separate line by tab delimiter
-      while (std::getline(ss, column, '\t')) {
-        // Assign the entries by column to the correct variable, ignoring the
-        // timestamp and coverting to int
-        if (columnIndex % 4 == 0)
-          user = std::stoi(column);
-        if (columnIndex % 4 == 1)
-          movie = std::stoi(column);
-        if (columnIndex % 4 == 2)
-          rating = std::stoi(column);
-        columnIndex++;
+        // Separate line by tab delimiter
+        while (std::getline(ss, column, '\t')) {
+          // Assign the entries by column to the correct variable, ignoring the
+          // timestamp and coverting to int
+          if (columnIndex % 4 == 0)
+            user = std::stoi(column);
+          if (columnIndex % 4 == 1)
+            movie = std::stoi(column);
+          if (columnIndex % 4 == 2)
+            rating = std::stoi(column);
+          columnIndex++;
+        }
+
+        // Push current line to our vectors
+        data.insert(std::make_tuple(user, movie, rating));
       }
-
-      // Push current line to our vectors
-      data.insert(std::make_tuple(user, movie, rating));
     }
     fileReader.close();
   } else {
