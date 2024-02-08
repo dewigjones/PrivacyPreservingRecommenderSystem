@@ -164,7 +164,7 @@ std::vector<std::vector<uint64_t>> CSP::reconstituteItem(
   // Go through M
   for (auto [i, j] : CSP::M) {
     if (indexMap.find(j) != indexMap.end()) {
-      result.push_back(A.at(indexMap.find(j)->first));
+      result.push_back(A.at(indexMap.find(j)->second));
     } else {
       maxIndex++;
       indexMap.insert(std::make_pair(j, maxIndex));
@@ -442,7 +442,7 @@ CSP::calculateUiandVVectors(int requestedUser,
   vResult.resize(index);
 
   // Go through vResult and push back u ciphertext to uResult
-  for (int i = 0; i < CSP::M.size(); i++) {
+  for (int i = 0; i < vResult.size(); i++) {
     uResult.push_back(uVectorEnc);
   }
 
@@ -468,7 +468,7 @@ std::vector<seal::Ciphertext> CSP::reducePredictionVector(
       rowSum[0] += (uint64_t)predictionVectorDecoded.at(i).at(j);
     }
 
-    rowSum[0] = rowSum[0] >> alpha + 14;
+    rowSum[0] = rowSum[0] >> (alpha + 14);
     // Re-encode and re-encrypt
     seal::Plaintext curRowSumPlain;
     sealBatchEncoder.encode(rowSum, curRowSumPlain);
