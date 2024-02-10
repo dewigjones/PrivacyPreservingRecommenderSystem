@@ -468,7 +468,7 @@ std::vector<seal::Ciphertext> CSP::reducePredictionVector(
       rowSum[0] += (uint64_t)predictionVectorDecoded.at(i).at(j);
     }
 
-    rowSum[0] = rowSum[0] >> (alpha + 14);
+    rowSum[0] = rowSum[0] >> alpha;
     // Re-encode and re-encrypt
     seal::Plaintext curRowSumPlain;
     sealBatchEncoder.encode(rowSum, curRowSumPlain);

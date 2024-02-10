@@ -51,7 +51,7 @@ int main() {
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
   int maxLines = 300;
-  int skipLines = 0;
+  int skipLines = 50;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -122,8 +122,8 @@ int main() {
     std::vector<uint64_t> UEncodingVector(batchEncoder.slot_count(), 0ULL),
         VEncodingVector(batchEncoder.slot_count(), 0ULL);
     for (int j = 0; j < batchEncoder.slot_count(); j++) {
-      UEncodingVector[j] = (uint64_t)rand() % 5;
-      VEncodingVector[j] = (uint64_t)rand() % 5;
+      UEncodingVector[j] = 1ULL;
+      VEncodingVector[j] = 1ULL;
     }
     seal::Plaintext UPlain, VPlain;
     batchEncoder.encode(UEncodingVector, UPlain);
@@ -184,7 +184,7 @@ int main() {
     std::vector<uint64_t> curRow;
     decryptor.decrypt(resultsFor1.at(i), curRowPlain);
     batchEncoder.decode(curRowPlain, curRow);
-    std::cout << curRow.at(0) << std::endl;
+    std::cout << (double)curRow.at(0) / pow(2, 40) << std::endl;
   }
   std::cout << "Finished" << std::endl;
   return 0;

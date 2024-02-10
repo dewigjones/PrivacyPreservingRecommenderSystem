@@ -35,7 +35,7 @@ class CSP {
   size_t sealSlotCount;
 
   // Algorithmic parameters
-  int alpha = 40;
+  int alpha = 20;
   int beta = 20;
   int twoPowerAlpha;
   int twoPowerBeta;

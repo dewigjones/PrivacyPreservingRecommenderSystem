@@ -390,7 +390,7 @@ std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
     for (int j = 0; j < sealSlotCount; j++) {
       curRowMaskSum[0] += dDimensionalMultiplicationMask.at(i).at(j);
     }
-    curRowMaskSum[0] = curRowMaskSum[0] >> alpha + 14;
+    curRowMaskSum[0] = curRowMaskSum[0] >> alpha;
     seal::Plaintext curRowMaskSumPlain;
     sealBatchEncoder.encode(curRowMaskSum, curRowMaskSumPlain);
     sealEvaluator.sub_plain_inplace(result.at(i), curRowMaskSumPlain);
