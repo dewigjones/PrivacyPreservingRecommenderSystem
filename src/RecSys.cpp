@@ -313,7 +313,8 @@ RecSys::RecSys(std::shared_ptr<CSP> csp,
 }
 
 ///@brief get the encrypted predictions of all films for user i
-std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
+std::pair<std::vector<int>, std::vector<seal::Ciphertext>>
+RecSys::computePredictions(int user) {
   // Mask and send UHat and VHat
   std::vector<std::vector<uint64_t>> UHatMask(UHat.size()),
       VHatMask(VHat.size());
@@ -352,10 +353,12 @@ std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
   }
   // Keep track of order that the items are found to remove correct mask
   std::set<int> observedItems{};
+  std::vector<int> orderofItems;
   int index = 0;
   for (int i = 0; i < RecSys::M.size(); i++) {
     if (observedItems.find(M.at(i).second) == observedItems.end()) {
       observedItems.insert(M.at(i).second);
+      orderofItems.push_back(M.at(i).second);
       seal::Plaintext plainRes;
       sealBatchEncoder.encode(VHatMask.at(i), plainRes);
       sealEvaluator.sub_plain_inplace(VVector.at(index++), plainRes);
@@ -396,7 +399,7 @@ std::vector<seal::Ciphertext> RecSys::computePredictions(int user) {
     sealEvaluator.sub_plain_inplace(result.at(i), curRowMaskSumPlain);
   }
 
-  return result;
+  return {orderofItems, result};
 }
 
 /// @brief Set the space of ratings

@@ -50,8 +50,8 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 300;
-  int skipLines = 50;
+  int maxLines = 500;
+  int skipLines = 0;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -175,8 +175,7 @@ int main() {
   recSysInstance->gradientDescent();
 
   std::cout << "Computing results for user 1" << std::endl;
-  std::vector<seal::Ciphertext> resultsFor1 =
-      recSysInstance->computePredictions(1);
+  auto [items, resultsFor1] = recSysInstance->computePredictions(1);
 
   std::cout << "Decrypted results for user 1:" << std::endl;
   for (int i = 0; i < resultsFor1.size(); i++) {
@@ -184,7 +183,8 @@ int main() {
     std::vector<uint64_t> curRow;
     decryptor.decrypt(resultsFor1.at(i), curRowPlain);
     batchEncoder.decode(curRowPlain, curRow);
-    std::cout << (double)curRow.at(0) / pow(2, 40) << std::endl;
+    std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 41)
+              << std::endl;
   }
   std::cout << "Finished" << std::endl;
   return 0;
