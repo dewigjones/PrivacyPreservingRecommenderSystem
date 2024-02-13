@@ -38,14 +38,14 @@ class RecSys {
   size_t sealSlotCount;
 
   // Parameters for RS
-  int d;               // Dimension of profiles
-  int alpha = 20;      // Number of integer bits for real numbers
-  int beta = 20;       // Number of fractional bits for real numbers
-  int gamma = 20;      // Number of bits for gradient descent computation
-  int lambda = 18;     // Learning rate
-  int threshold = 10;  // Threshold for stopping criterion
-  int maxEpochs = 15;  // Maximum number of iterations for gradient descent -
-                       // regardless of if stopping criterion met
+  int d;                 // Dimension of profiles
+  int alpha = 20;        // Number of integer bits for real numbers
+  int beta = 20;         // Number of fractional bits for real numbers
+  int gamma = 20;        // Number of bits for gradient descent computation
+  int lambda = 1 << 10;  // Learning rate
+  int threshold = 10;    // Threshold for stopping criterion
+  int maxEpochs = 15;    // Maximum number of iterations for gradient descent -
+                         // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;
