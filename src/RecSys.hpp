@@ -15,6 +15,7 @@
 #include <limits>
 #include <random>
 
+#define scaled0point1 104857
 class RecSys {
   // Values and Variables
   std::shared_ptr<CSP> CSPInstance;
@@ -38,14 +39,15 @@ class RecSys {
   size_t sealSlotCount;
 
   // Parameters for RS
-  int d;                 // Dimension of profiles
-  int alpha = 20;        // Number of integer bits for real numbers
-  int beta = 20;         // Number of fractional bits for real numbers
-  int gamma = 20;        // Number of bits for gradient descent computation
-  int lambda = 1 << 10;  // Learning rate
-  int threshold = 10;    // Threshold for stopping criterion
-  int maxEpochs = 15;    // Maximum number of iterations for gradient descent -
-                         // regardless of if stopping criterion met
+  int d;           // Dimension of profiles
+  int alpha = 20;  // Number of integer bits for real numbers
+  int beta = 20;   // Number of fractional bits for real numbers
+  uint64_t gamma =
+      scaled0point1;  // Number of bits for gradient descent computation
+  uint64_t lambda = scaled0point1;     // Learning rate
+  uint64_t threshold = scaled0point1;  // Threshold for stopping criterion
+  int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
+                       // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent
   std::vector<std::pair<int, int>> M;

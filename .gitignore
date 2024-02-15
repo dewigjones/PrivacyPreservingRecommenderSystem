@@ -2,4 +2,5 @@
 .cache/*
 build/*
 res/*
+runs/*
 runBatchJob.sbatch

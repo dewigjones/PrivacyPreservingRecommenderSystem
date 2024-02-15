@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <set>
 #include <vector>
 #include "MessageHandler.hpp"
@@ -38,6 +39,7 @@ bool RecSys::uploadRating(EncryptedRatingAHE rating) {
 bool RecSys::gradientDescent() {
   int curEpoch = 0;
   while (curEpoch++ < maxEpochs && !stoppingCriterionCheckResult) {
+    std::cout << "Iteration: " << curEpoch << std::endl;
     // Steps 1-2  (Component-Wise Multiplication and Rating Addition)
     std::vector<std::vector<uint64_t>> epsilonMask(RecSys::M.size(),
                                                    std::vector<uint64_t>());

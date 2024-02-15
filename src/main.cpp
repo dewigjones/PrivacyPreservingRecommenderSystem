@@ -26,6 +26,7 @@
 
 int main() {
   // Set up seal
+  std::cout << "Gamma run" << std::endl;
   std::cout << "Initialising seal" << std::endl;
   seal::EncryptionParameters parms(seal::scheme_type::bgv);
   size_t poly_modulus_degree = 16384;
@@ -50,8 +51,8 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 500;
-  int skipLines = 0;
+  int maxLines = 150;
+  int skipLines = 50;
   int curLine = 0;
   // Use read file stream
   if (std::ifstream fileReader("../res/u1.base"); fileReader.is_open()) {
@@ -102,7 +103,7 @@ int main() {
   std::vector<seal::Ciphertext> encryptedRatings;
   for (int rating : ratings) {
     std::vector<uint64_t> ratingEncodingVector(batchEncoder.slot_count(), 0ULL);
-    ratingEncodingVector[0] = static_cast<uint64_t>(rating);
+    ratingEncodingVector[0] = static_cast<uint64_t>(rating) << 20;
 
     seal::Plaintext ratingPlain;
     seal::Ciphertext ratingEnc;
@@ -122,8 +123,8 @@ int main() {
     std::vector<uint64_t> UEncodingVector(batchEncoder.slot_count(), 0ULL),
         VEncodingVector(batchEncoder.slot_count(), 0ULL);
     for (int j = 0; j < batchEncoder.slot_count(); j++) {
-      UEncodingVector[j] = 1ULL;
-      VEncodingVector[j] = 1ULL;
+      UEncodingVector[j] = (1ULL << 19);
+      VEncodingVector[j] = (1ULL << 19);
     }
     seal::Plaintext UPlain, VPlain;
     batchEncoder.encode(UEncodingVector, UPlain);
@@ -183,7 +184,7 @@ int main() {
     std::vector<uint64_t> curRow;
     decryptor.decrypt(resultsFor1.at(i), curRowPlain);
     batchEncoder.decode(curRowPlain, curRow);
-    std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 41)
+    std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 20)
               << std::endl;
   }
   std::cout << "Finished" << std::endl;
