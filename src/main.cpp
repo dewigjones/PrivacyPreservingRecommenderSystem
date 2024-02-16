@@ -26,7 +26,6 @@
 
 int main() {
   // Set up seal
-  std::cout << "Gamma run" << std::endl;
   std::cout << "Initialising seal" << std::endl;
   seal::EncryptionParameters parms(seal::scheme_type::bgv);
   size_t poly_modulus_degree = 16384;
@@ -51,7 +50,7 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 150;
+  int maxLines = 550;
   int skipLines = 50;
   int curLine = 0;
   // Use read file stream

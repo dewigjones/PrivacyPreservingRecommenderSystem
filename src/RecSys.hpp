@@ -46,7 +46,7 @@ class RecSys {
       scaled0point1;  // Number of bits for gradient descent computation
   uint64_t lambda = scaled0point1;     // Learning rate
   uint64_t threshold = scaled0point1;  // Threshold for stopping criterion
-  int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
+  int maxEpochs = 20;  // Maximum number of iterations for gradient descent -
                        // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent
