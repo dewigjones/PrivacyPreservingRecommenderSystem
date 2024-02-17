@@ -42,10 +42,9 @@ class RecSys {
   int d;           // Dimension of profiles
   int alpha = 20;  // Number of integer bits for real numbers
   int beta = 20;   // Number of fractional bits for real numbers
-  uint64_t gamma =
-      scaled0point1;  // Number of bits for gradient descent computation
-  uint64_t lambda = scaled0point1;     // Learning rate
-  uint64_t threshold = scaled0point1;  // Threshold for stopping criterion
+  uint64_t gamma = scaled0point1 / 2;   // Small gain factor
+  uint64_t lambda = scaled0point1 / 2;  // Learning rate
+  uint64_t threshold = scaled0point1;   // Threshold for stopping criterion
   int maxEpochs = 20;  // Maximum number of iterations for gradient descent -
                        // regardless of if stopping criterion met
 

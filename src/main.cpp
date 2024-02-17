@@ -50,7 +50,7 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 550;
+  int maxLines = 350;
   int skipLines = 50;
   int curLine = 0;
   // Use read file stream
