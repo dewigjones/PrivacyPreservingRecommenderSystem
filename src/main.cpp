@@ -50,7 +50,7 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 350;
+  int maxLines = 150;
   int skipLines = 50;
   int curLine = 0;
   // Use read file stream
@@ -102,7 +102,7 @@ int main() {
   std::vector<seal::Ciphertext> encryptedRatings;
   for (int rating : ratings) {
     std::vector<uint64_t> ratingEncodingVector(batchEncoder.slot_count(), 0ULL);
-    ratingEncodingVector[0] = static_cast<uint64_t>(rating) << 20;
+    ratingEncodingVector[0] = static_cast<uint64_t>(rating);
 
     seal::Plaintext ratingPlain;
     seal::Ciphertext ratingEnc;
@@ -122,8 +122,8 @@ int main() {
     std::vector<uint64_t> UEncodingVector(batchEncoder.slot_count(), 0ULL),
         VEncodingVector(batchEncoder.slot_count(), 0ULL);
     for (int j = 0; j < batchEncoder.slot_count(); j++) {
-      UEncodingVector[j] = (1ULL << 19);
-      VEncodingVector[j] = (1ULL << 19);
+      UEncodingVector[j] = 1ULL;
+      VEncodingVector[j] = 1ULL;
     }
     seal::Plaintext UPlain, VPlain;
     batchEncoder.encode(UEncodingVector, UPlain);

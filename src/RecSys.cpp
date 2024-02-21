@@ -76,7 +76,7 @@ bool RecSys::gradientDescent() {
       }
       // Set all of i and j entry to sum
       for (int j = 0; j < sealSlotCount; j++) {
-        epsilonMaskSum[i][j] = jSum << alpha;
+        epsilonMaskSum[i][j] = jSum;
       }
       // Encode and subtract sum of mask
       seal::Plaintext epsilonMaskSumPlaintext;
@@ -98,7 +98,7 @@ bool RecSys::gradientDescent() {
 
       // VGradient'[i] = u * R[i][j] + twoToTheAlpha * lambda * VHat[i][j]
       sealEvaluator.multiply(RecSys::R[i], RecSys::U[i], VGradientPrime[i]);
-      sealEvaluator.multiply_plain(UHat[i], scaledLambda, VHatLambdaMul);
+      sealEvaluator.multiply_plain(VHat[i], scaledLambda, VHatLambdaMul);
       sealEvaluator.add_inplace(UGradientPrime[i], VHatLambdaMul);
 
       // TODO(Check #1 scaling (alpha, beta))
