@@ -177,8 +177,14 @@ int main() {
   std::cout << "Computing results for user 1" << std::endl;
   auto [items, resultsFor1] = recSysInstance->computePredictions(1);
 
+  std::ofstream user1out("../data/user1");
   std::cout << "Decrypted results for user 1:" << std::endl;
   for (int i = 0; i < resultsFor1.size(); i++) {
+    if (user1out.is_open()) {
+      std::stringstream line;
+      resultsFor1.at(i).save(line);
+      user1out << items.at(i) << ": " << line.str() << '\n';
+    }
     seal::Plaintext curRowPlain;
     std::vector<uint64_t> curRow;
     decryptor.decrypt(resultsFor1.at(i), curRowPlain);
@@ -186,6 +192,9 @@ int main() {
     std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 20)
               << std::endl;
   }
+  if (user1out.is_open())
+    user1out.close();
+
   std::cout << "Finished" << std::endl;
   return 0;
 }
