@@ -3,4 +3,5 @@
 build/*
 res/*
 runs/*
+data/*
 runBatchJob.sbatch

@@ -39,6 +39,16 @@ int main() {
   seal::PublicKey public_key;
   keygen.create_public_key(public_key);
 
+  // Save public and private key for purposes of experimentation
+  {
+    std::ofstream publicKeyOut("../data/pubkey", std::ios::binary);
+    public_key.save(publicKeyOut);
+  }
+  {
+    std::ofstream secretKeyOut("../data/seckey", std::ios::binary);
+    secret_key.save(secretKeyOut);
+  }
+
   seal::Encryptor encryptor(context, public_key);
   seal::BatchEncoder batchEncoder(context);
   seal::Decryptor decryptor(context, secret_key);
@@ -177,13 +187,12 @@ int main() {
   std::cout << "Computing results for user 1" << std::endl;
   auto [items, resultsFor1] = recSysInstance->computePredictions(1);
 
-  std::ofstream user1out("../data/user1");
   std::cout << "Decrypted results for user 1:" << std::endl;
   for (int i = 0; i < resultsFor1.size(); i++) {
-    if (user1out.is_open()) {
-      std::stringstream line;
+    {
+      std::string outputName = "../data/user1_" + std::to_string(items.at(i));
+      std::ofstream line(outputName, std::ios::binary);
       resultsFor1.at(i).save(line);
-      user1out << items.at(i) << ": " << line.str() << '\n';
     }
     seal::Plaintext curRowPlain;
     std::vector<uint64_t> curRow;
@@ -192,8 +201,6 @@ int main() {
     std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 20)
               << std::endl;
   }
-  if (user1out.is_open())
-    user1out.close();
 
   std::cout << "Finished" << std::endl;
   return 0;
