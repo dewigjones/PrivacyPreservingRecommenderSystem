@@ -42,10 +42,10 @@ class RecSys {
   int d;                   // Dimension of profiles
   int alpha = 20;          // Number of integer bits for real numbers
   int beta = 20;           // Number of fractional bits for real numbers
-  double gamma = 1.1;      // Small gain factor
-  double lambda = 0.1;     // Learning rate
+  double gamma = 0.1;      // Small gain factor
+  double lambda = 0.05;    // Learning rate
   double threshold = 0.5;  // Threshold for stopping criterion
-  int maxEpochs = 20;  // Maximum number of iterations for gradient descent -
+  int maxEpochs = 10;  // Maximum number of iterations for gradient descent -
                        // regardless of if stopping criterion met
 
   // Intermediate values for gradient descent
@@ -69,8 +69,6 @@ class RecSys {
          std::vector<std::pair<int, int>> providedM);
 
   bool uploadRating(EncryptedRatingAHE rating);
-  int getPredictedRating(int userID, int itemID);
-  std::vector<EncryptedRating> getPredictiedRatings(int userID);
   bool gradientDescent();
   std::pair<std::vector<int>, std::vector<seal::Ciphertext>> computePredictions(
       int user);

@@ -7,6 +7,7 @@
 #include <seal/plaintext.h>
 #include <seal/publickey.h>
 #include <seal/secretkey.h>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -28,7 +29,7 @@ int main() {
   // Set up seal
   std::cout << "Initialising seal" << std::endl;
   seal::EncryptionParameters parms(seal::scheme_type::bgv);
-  size_t poly_modulus_degree = 16384;
+  size_t poly_modulus_degree = 4096;
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
   parms.set_plain_modulus(
@@ -60,7 +61,7 @@ int main() {
   std::set<std::tuple<int, int, int>> data;
   std::vector<std::pair<int, int>> curM;
   std::vector<int> ratings;
-  int maxLines = 150;
+  int maxLines = 1050;
   int skipLines = 50;
   int curLine = 0;
   // Use read file stream
@@ -182,7 +183,17 @@ int main() {
   recSysInstance->setEmbeddings(U, V, UHat, VHat);
 
   std::cout << "Running Gradient Descent" << std::endl;
+  // Start timer
+  auto startTime = std::chrono::high_resolution_clock::now();
+  // Run Gradient Descent
   recSysInstance->gradientDescent();
+  // Stop timer
+  auto stopTime = std::chrono::high_resolution_clock::now();
+  // Calculate difference
+  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+      stopTime - startTime);
+  std::cout << "Gradient descent took " << duration.count() << " miliseconds "
+            << std::endl;
 
   std::cout << "Computing results for user 1" << std::endl;
   auto [items, resultsFor1] = recSysInstance->computePredictions(1);
@@ -197,6 +208,25 @@ int main() {
     seal::Plaintext curRowPlain;
     std::vector<uint64_t> curRow;
     decryptor.decrypt(resultsFor1.at(i), curRowPlain);
+    batchEncoder.decode(curRowPlain, curRow);
+    std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 20)
+              << std::endl;
+  }
+
+  std::cout << "Computing results for user 2" << std::endl;
+  auto [itemsUser2, resultsFor2] = recSysInstance->computePredictions(2);
+
+  std::cout << "Decrypted results for user 2:" << std::endl;
+  for (int i = 0; i < resultsFor2.size(); i++) {
+    {
+      std::string outputName =
+          "../data/user2_" + std::to_string(itemsUser2.at(i));
+      std::ofstream line(outputName, std::ios::binary);
+      resultsFor2.at(i).save(line);
+    }
+    seal::Plaintext curRowPlain;
+    std::vector<uint64_t> curRow;
+    decryptor.decrypt(resultsFor2.at(i), curRowPlain);
     batchEncoder.decode(curRowPlain, curRow);
     std::cout << items.at(i) << ", " << (double)curRow.at(0) / pow(2, 20)
               << std::endl;
