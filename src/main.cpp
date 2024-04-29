@@ -29,7 +29,9 @@ int main() {
   // Set up seal
   std::cout << "Initialising seal" << std::endl;
   seal::EncryptionParameters parms(seal::scheme_type::bgv);
-  size_t poly_modulus_degree = 4096;
+  size_t poly_modulus_degree =
+      16384;  // Change to 4096 for optimal speed, however this will need to be
+              // changed in the frontend too if using that
   parms.set_poly_modulus_degree(poly_modulus_degree);
   parms.set_coeff_modulus(seal::CoeffModulus::BFVDefault(poly_modulus_degree));
   parms.set_plain_modulus(
