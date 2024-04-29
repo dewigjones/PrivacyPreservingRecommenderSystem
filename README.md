@@ -14,3 +14,10 @@ This is a Privacy Preserving Recommender System for movie recommendations using 
     cmake ..
     make
     ./PPRS
+
+Note: Please run `./clean.sh` between runs to avoid errors. A new build can then be made with:
+
+      cd build
+      cmake ..
+      make
+      ./PPRS
